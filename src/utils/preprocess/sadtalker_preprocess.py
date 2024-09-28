@@ -26,6 +26,9 @@ class SadTalkerPreprocess:
             return None, None, None
 
         face = cv2.resize(face, (self.pic_size, self.pic_size))
+        face_for_rendering = face.copy()
+        crop_for_rendering = copy.deepcopy(crop)
+
         landmarks = self.extract_landmarks(face)
         if landmarks is None:
             print("No landmark is detected on cropped face!")
@@ -43,7 +46,8 @@ class SadTalkerPreprocess:
 
         _, face, landmarks, _ = align_img(face, landmarks, self.lm3d_std)
         torch_face = torch.tensor(np.array(face)/255., dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-        return torch_face, crop, landmarks_ret
+        face_for_rendering = torch.tensor(face_for_rendering/255., dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+        return torch_face, face_for_rendering, crop, crop_for_rendering, landmarks_ret
 
     def extract_landmarks(self, face):
         with torch.no_grad():

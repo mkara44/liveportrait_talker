@@ -1,23 +1,27 @@
 import cv2
 import torch
+import datetime
 import safetensors
 import safetensors.torch 
 from tqdm import tqdm
 import numpy as np
+import torch.nn.functional as F
 
 import src.utils.preprocess.audio as audio
 from src.utils.preprocess import networks
-from src.utils.preprocess.helper import load_x_from_safetensor, check_source_type, split_coeff, parse_audio_length, crop_pad_audio, generate_blink_seq_randomly
+from src.utils.helper import load_x_from_safetensor
+from src.utils.preprocess.helper import check_source_type, split_coeff, parse_audio_length, crop_pad_audio, generate_blink_seq_randomly
 from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, sadtalker_checkpoint_path, use_blink, speech_rate, syncnet_mel_step_size, sadtalker_preprocesser_cfg):
+    def __init__(self, device, fps, sadtalker_checkpoint_path, use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
         self.fps = fps
         self.use_blink = use_blink
         self.speech_rate = speech_rate
         self.syncnet_mel_step_size = syncnet_mel_step_size
+        self.liveportrait_input_shape = liveportrait_input_shape
 
         self.sd_prep = SadTalkerPreprocess(device=device,
                                            **sadtalker_preprocesser_cfg)
@@ -31,38 +35,47 @@ class Preprocess:
         self.net_recon.eval()
 
     def __call__(self, source_path, audio_path):
+        indiv_mels, num_frames = self.__load_audio(audio_path=audio_path)
+
         source_type = check_source_type(source_path)
         if source_type == "image":
-            torch_inp_face, face, exp_coeffs, angle_coeffs = self.__image_source_call(source_img_path=source_path)
-            data = {"source_type": source_type,
-                    "torch_inp_face" : torch_inp_face,
-                    "face" : face,
-                    "exp_coeffs" : exp_coeffs,
-                    "angle_coeffs" : angle_coeffs}
+            img, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(source_img_path=source_path,
+                                                                                             num_frames=num_frames)
+            batch = {"source_type": source_type,
+                     "rendering_input_face" : face_for_rendering,
+                     "face_crop_coords": face_crop_coords,
+                     "original_frame": img,
+                     "pred_coeff": pred_coeff,
+                     "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
             
-        indiv_mels, num_frames = self.__load_audio(audio_path=audio_path)
         blink_ratio = self.__get_blink(num_frames=num_frames)
 
-        data["indiv_mels"] = indiv_mels
-        data["num_frame"] = num_frames
-        data["blink_ratio"] = blink_ratio
+        batch["indiv_mels"] = indiv_mels
+        batch["num_frames"] = num_frames
+        batch["blink_ratio"] = blink_ratio
+        batch["audio_path"] = audio_path
             
-        return data
+        return batch
 
-    def __image_source_call(self, source_img_path):
+    def __image_source_call(self, source_img_path, num_frames):
         img = cv2.imread(source_img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        torch_inp_face, face, exp_coeffs, angle_coeffs = self.__get_3dmm_coeff(img)
-        return torch_inp_face, face, exp_coeffs, angle_coeffs
+        face_for_rendering, pred_coeff, crop_for_rendering = self.__get_3dmm_coeff(img)
+        pred_coeff = pred_coeff.repeat(num_frames, 1).unsqueeze(0)
+        return img, face_for_rendering, pred_coeff, crop_for_rendering
 
     def __get_3dmm_coeff(self, frame):
-        torch_inp_face, face, _ = self.sd_prep(frame)
+        torch_inp_face, face_for_rendering, _, crop_for_rendering, _ = self.sd_prep(frame)
         torch_inp_face = torch_inp_face.to(self.device)
 
         full_coeff = self.net_recon(torch_inp_face)
-        coeffs = split_coeff(full_coeff)
-        return torch_inp_face, face, coeffs["exp"], coeffs["angle"]
+        pred_coeff = split_coeff(full_coeff)
+        pred_coeff = torch.cat([pred_coeff["exp"][0],
+                                pred_coeff["angle"][0],
+                                pred_coeff["trans"][0]])
+        
+        return face_for_rendering, pred_coeff, crop_for_rendering
 
     def __load_audio(self, audio_path):
         wav = audio.load_wav(audio_path, self.speech_rate) 
@@ -91,5 +104,5 @@ class Preprocess:
             ratio = torch.FloatTensor(ratio).unsqueeze(0)                       # bs T
         else:
             ratio = torch.FloatTensor(ratio).unsqueeze(0).fill_(0.) 
-            
+
         return ratio.to(self.device)
