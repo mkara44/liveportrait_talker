@@ -13,11 +13,23 @@ inference:
       model_path: ../liveportrait_talker_dev/pretrained_models/sadtalker
       frontality_threshold: 50
       lm3d_mat_path: ../liveportrait_talker_dev/pretrained_models/sadtalker
+  audio2coeff:
+    flag_exp: True
+    flag_pose: True
+    audio2pose_cfg:
+      cvae_cfg:
+        seq_len: 32
+        latent_size: 64
+        audio_emb_in_size: 512
+        audio_emb_out_size: 6
+        encoder_layer_sizes: [192, 128]
+        decoder_layer_sizes: [128, 192]
+        num_classes: 46
   map2lp:
     semantic_radius: 14
-    mappingnet_model_path: ../liveportrait_talker_dev/pretrained_models/mappingnet_basic_onlyexp_64inp_epoch00035.pt
+    mappingnet_model_path: ../liveportrait_talker_dev/pretrained_models/mappingnet_basic_70inp_nokp.pt #mappingnet_basic_onlyexp_64inp_epoch00035.pt
     mappingnet_cfg: 
-      coeff_nc: 64
+      coeff_nc: 70
       descriptor_nc: 1024
       layer: 3
       num_kp: 21

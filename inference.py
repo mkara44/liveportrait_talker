@@ -22,14 +22,13 @@ def main(args):
                        audio_path=args.audio_path)
     
     audio2coeff = Audio2Coeff(device=cfg.device,
-                              sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path)
+                              sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
+                              **cfg.audio2coeff)
     
     batch = audio2coeff(batch=batch)
     
     map2lp = Map2LivePortrait(device=cfg.device,
-                              semantic_radius=cfg.map2lp.semantic_radius,
-                              mappingnet_model_path=cfg.map2lp.mappingnet_model_path,
-                              mappingnet_cfg=cfg.map2lp.mappingnet_cfg)
+                              **cfg.map2lp)
     batch = map2lp(batch=batch)
 
     lp_render = LivePortraitRender(device=cfg.device,

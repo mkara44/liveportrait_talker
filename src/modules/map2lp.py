@@ -14,16 +14,16 @@ class Map2LivePortrait:
         self.mapping.to(self.device)
 
     def __call__(self, batch):
-        target_sementics_list = self.preprocess(num_frames=batch["num_frames"],
-                                                predicted_expressions=batch["predicted_expressions"])
+        target_semantics_list = self.preprocess(num_frames=batch["num_frames"],
+                                                predicted_coeffs=batch["predicted_coeffs"])
         
-        mapped_semantics = self.mapping(target_sementics_list)
+        mapped_semantics = self.mapping(target_semantics_list)
         batch["mapped_semantics"] = mapped_semantics
         return batch
 
-    def preprocess(self, num_frames, predicted_expressions):
+    def preprocess(self, num_frames, predicted_coeffs):
         target_semantics_list = []
         for frame_idx in range(num_frames):
-            target_semantics = transform_semantic_target(predicted_expressions, frame_idx, self.semantic_radius)
+            target_semantics = transform_semantic_target(predicted_coeffs, frame_idx, self.semantic_radius)
             target_semantics_list.append(target_semantics)
         return torch.stack(target_semantics_list, dim=0)

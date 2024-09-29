@@ -28,3 +28,4 @@ class SaveResult:
         os.system(f"cd {tmp_folder_path} && ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p ../rendered_output_novoice.mp4")
         os.system(f"rm -rf {tmp_folder_path}")
         os.system(f"ffmpeg -hide_banner -loglevel error -i {os.path.join(video_path, 'rendered_output_novoice.mp4')} -i {batch['audio_path']} -map 0:v -map 1:a -c:v copy -shortest {os.path.join(video_path, 'rendered_output.mp4')}")
+        os.system(f"rm -rf {os.path.join(video_path, 'rendered_output_novoice.mp4')}")

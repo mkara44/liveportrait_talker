@@ -26,7 +26,7 @@ class LivePortraitWrapper(object):
         self.motion_extractor = load_model(liveportrait_cfg.checkpoint_M, model_config, self.device, 'motion_extractor')
         self.warping_module = load_model(liveportrait_cfg.checkpoint_W, model_config, self.device, 'warping_module')
         self.spade_generator = load_model(liveportrait_cfg.checkpoint_G, model_config, self.device, 'spade_generator')
-        #self.stitching_retargeting_module = load_model(liveportrait_cfg.checkpoint_S, model_config, self.device, 'stitching_retargeting_module')
+        self.stitching_retargeting_module = load_model(liveportrait_cfg.checkpoint_S, model_config, self.device, 'stitching_retargeting_module')
 
     def inference_ctx(self):
         if self.device == "mps":
