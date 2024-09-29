@@ -14,7 +14,8 @@ def main(args):
     cfg = cfg.inference
     print("Config File is loaded succesfully!")
 
-    file_operations = FileOperations(save_path=args.save_path,
+    file_operations = FileOperations(device=cfg.device,
+                                     save_path=args.save_path,
                                      source_path=args.source_path,
                                      audio_path=args.audio_path)
     
@@ -39,6 +40,7 @@ def main(args):
     batch = {"source_path": args.source_path,
              "audio_path": args.audio_path,
              "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
+    
     if file_operations.preprocessed_inputs_exist:
         print("Using preprocessed inputs for this source input!")
         batch = {**batch, **file_operations.load_inputs()}  

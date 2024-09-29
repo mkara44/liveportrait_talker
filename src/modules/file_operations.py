@@ -5,7 +5,8 @@ from scipy.io import savemat, loadmat
 
 
 class FileOperations:
-    def __init__(self, save_path, source_path, audio_path):
+    def __init__(self, device, save_path, source_path, audio_path):
+        self.device = device
         self.save_path = save_path
         self.source_name = source_path.split("/")[-1].split(".")[0]
         self.audio_name = audio_path.split("/")[-1].split(".")[0]
@@ -47,10 +48,10 @@ class FileOperations:
     def load_inputs(self):
         batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
         batch_to_load = {"source_type": batch_inputs["source_type"][0],
-                         "rendering_input_face": torch.tensor(batch_inputs["rendering_input_face"]),
+                         "rendering_input_face": torch.tensor(batch_inputs["rendering_input_face"]).to(self.device),
                          "face_crop_coords": list(batch_inputs["face_crop_coords"][0]),
                          "original_frame": batch_inputs["original_frame"],
-                         "source_coeff": torch.tensor(batch_inputs["source_coeff"])}
+                         "source_coeff": torch.tensor(batch_inputs["source_coeff"]).to(self.device)}
         return batch_to_load
 
     def save_output(self, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):

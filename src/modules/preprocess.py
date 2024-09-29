@@ -40,7 +40,7 @@ class Preprocess:
         batch["num_frames"] = num_frames
 
         source_type = check_source_type(batch["source_path"])
-        if self.preprocessed_inputs_exist:
+        if not self.preprocessed_inputs_exist:
             if source_type == "image":
                 img, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(source_img_path=batch["source_path"],
                                                                                                 num_frames=num_frames)
