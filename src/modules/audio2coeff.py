@@ -6,7 +6,7 @@ from src.models.audio2exp import Audio2Exp
 from src.models.audio2pose import Audio2Pose
 
 
-class Audio2Coeff():
+class SadtalkerAudio2Coeff():
     def __init__(self, device, sadtalker_checkpoint_path, flag_exp, flag_pose, audio2pose_cfg):
         self.device = device
         self.flag_exp = flag_exp

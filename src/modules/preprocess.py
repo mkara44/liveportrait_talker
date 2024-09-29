@@ -1,6 +1,5 @@
 import cv2
 import torch
-import datetime
 import safetensors
 import safetensors.torch 
 from tqdm import tqdm
@@ -15,13 +14,14 @@ from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, sadtalker_checkpoint_path, use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
+    def __init__(self, device, fps, sadtalker_checkpoint_path, preprocessed_inputs_exist, use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
         self.fps = fps
         self.use_blink = use_blink
         self.speech_rate = speech_rate
         self.syncnet_mel_step_size = syncnet_mel_step_size
         self.liveportrait_input_shape = liveportrait_input_shape
+        self.preprocessed_inputs_exist = preprocessed_inputs_exist
 
         self.sd_prep = SadTalkerPreprocess(device=device,
                                            **sadtalker_preprocesser_cfg)
@@ -34,27 +34,24 @@ class Preprocess:
         self.net_recon.load_state_dict(load_x_from_safetensor(checkpoint, 'face_3drecon'))
         self.net_recon.eval()
 
-    def __call__(self, source_path, audio_path):
-        indiv_mels, num_frames = self.__load_audio(audio_path=audio_path)
-
-        source_type = check_source_type(source_path)
-        if source_type == "image":
-            img, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(source_img_path=source_path,
-                                                                                             num_frames=num_frames)
-            batch = {"source_type": source_type,
-                     "rendering_input_face" : face_for_rendering,
-                     "face_crop_coords": face_crop_coords,
-                     "original_frame": img,
-                     "pred_coeff": pred_coeff,
-                     "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
-            
-        blink_ratio = self.__get_blink(num_frames=num_frames)
-
+    def __call__(self, batch):
+        indiv_mels, num_frames = self.__load_audio(audio_path=batch["audio_path"])
         batch["indiv_mels"] = indiv_mels
         batch["num_frames"] = num_frames
-        batch["blink_ratio"] = blink_ratio
-        batch["audio_path"] = audio_path
+
+        source_type = check_source_type(batch["source_path"])
+        if self.preprocessed_inputs_exist:
+            if source_type == "image":
+                img, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(source_img_path=batch["source_path"],
+                                                                                                num_frames=num_frames)
+                batch["source_type"] = source_type,
+                batch["rendering_input_face"] = face_for_rendering
+                batch["face_crop_coords"] = face_crop_coords
+                batch["original_frame"] = img
+                batch["source_coeff"] = pred_coeff
             
+        blink_ratio = self.__get_blink(num_frames=num_frames)
+        batch["blink_ratio"] = blink_ratio
         return batch
 
     def __image_source_call(self, source_img_path, num_frames):

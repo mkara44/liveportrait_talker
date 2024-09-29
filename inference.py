@@ -1,43 +1,53 @@
+import datetime
 from omegaconf import OmegaConf
 from argparse import ArgumentParser
 
 from src.modules.preprocess import Preprocess
-from src.modules.audio2coeff import Audio2Coeff
+from src.modules.audio2coeff import SadtalkerAudio2Coeff
 from src.modules.map2lp import Map2LivePortrait
 from src.modules.lp_render import LivePortraitRender
-from src.modules.save_result import SaveResult
+from src.modules.file_operations import FileOperations
 
 
 def main(args):
     cfg = OmegaConf.load(args.config_path)
     cfg = cfg.inference
-    print("Config file is loaded succesfully!")
+    print("Config File is loaded succesfully!")
 
+    file_operations = FileOperations(save_path=args.save_path,
+                                     source_path=args.source_path,
+                                     audio_path=args.audio_path)
+    
     preprocess = Preprocess(device=cfg.device,
                             fps=cfg.fps,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
+                            preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
                             **cfg.preprocess)
     
-    batch = preprocess(source_path=args.source_path,
-                       audio_path=args.audio_path)
-    
-    audio2coeff = Audio2Coeff(device=cfg.device,
-                              sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
-                              **cfg.audio2coeff)
-    
-    batch = audio2coeff(batch=batch)
+    audio2coeff = SadtalkerAudio2Coeff(device=cfg.device,
+                                       sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
+                                       **cfg.audio2coeff)
     
     map2lp = Map2LivePortrait(device=cfg.device,
                               **cfg.map2lp)
-    batch = map2lp(batch=batch)
-
+    
     lp_render = LivePortraitRender(device=cfg.device,
                                    liveportrait_cfg=cfg.lp_render.liveportrait_cfg)
-    batch = lp_render(batch=batch)
+    
+    print("Pipeline Objects are initialized!")
+    
+    batch = {"source_path": args.source_path,
+             "audio_path": args.audio_path,
+             "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
+    if file_operations.preprocessed_inputs_exist:
+        print("Using preprocessed inputs for this source input!")
+        batch = {**batch, **file_operations.load_inputs()}  
+    
+    pipeline = [preprocess, audio2coeff, map2lp, lp_render]
+    for pipe_func in pipeline:
+        batch = pipe_func(batch)
 
-    save_result = SaveResult(save_path=args.save_path)
-    save_result(batch=batch)
-
+    file_operations.save(batch=batch)
     print("Done")
 
 if __name__ == "__main__":

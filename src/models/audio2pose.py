@@ -28,8 +28,8 @@ class Audio2Pose(nn.Module):
         
     def __call__(self, x):
         batch = {}
-        ref = x['pred_coeff']                            #bs 1 70
-        batch['ref'] = x['pred_coeff'][:,0,-6:]  
+        ref = x['source_coeff']                            #bs 1 70
+        batch['ref'] = x['source_coeff'][:,0,-6:]  
         batch['class'] = torch.LongTensor([0]).to(self.device) #x['class']  
         bs = ref.shape[0]
         
