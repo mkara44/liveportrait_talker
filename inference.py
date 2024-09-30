@@ -39,6 +39,7 @@ def main(args):
     
     batch = {"source_path": args.source_path,
              "audio_path": args.audio_path,
+             "head_pose_weight": args.head_pose_weight,
              "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
     
     if file_operations.preprocessed_inputs_exist:
@@ -57,7 +58,8 @@ if __name__ == "__main__":
     parser.add_argument("--config_path", type=str, help="path to config file")
     parser.add_argument("--source_path", type=str, help="path to source image/video")
     parser.add_argument("--audio_path", type=str, help="path to audio")
-    parser.add_argument("--save_path", type=str, help="path to audio")
+    parser.add_argument("--save_path", type=str, default="./outputs", help="path to save output video")
+    parser.add_argument("--head_pose_weight", type=float, default=1., help="weight to apply head pose")
     args = parser.parse_args()
 
     main(args)

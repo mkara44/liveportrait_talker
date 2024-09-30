@@ -164,3 +164,4 @@ cython_debug/
 test_videos/
 test.png
 .DS_Store
+outputs/

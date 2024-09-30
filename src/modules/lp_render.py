@@ -16,11 +16,11 @@ class LivePortraitRender:
                                                          liveportrait_cfg=liveportrait_cfg)
 
 
-    def make_motion_template_from_pred(self, pred):
+    def make_motion_template_from_pred(self, pred, head_pose_weight):
         bs = pred['exp'].shape[0]
-        pred['pitch'] = headpose_pred_to_degree(pred['pitch'])[:, None]  # Bx1
-        pred['yaw'] = headpose_pred_to_degree(pred['yaw'])[:, None]  # Bx1
-        pred['roll'] = headpose_pred_to_degree(pred['roll'])[:, None]  # Bx1
+        pred['pitch'] = headpose_pred_to_degree(pred['pitch'])[:, None] * head_pose_weight  # Bx1
+        pred['yaw'] = headpose_pred_to_degree(pred['yaw'])[:, None] * head_pose_weight  # Bx1
+        pred['roll'] = headpose_pred_to_degree(pred['roll'])[:, None] * head_pose_weight  # Bx1
         pred['exp'] = pred['exp'].reshape(bs, -1, 3)  # BxNx3
 
         R_i = get_rotation_matrix(pred['pitch'], pred['yaw'], pred['roll'])
@@ -43,7 +43,7 @@ class LivePortraitRender:
         f_s = self.live_portrait_wrapper.extract_feature_3d(batch["rendering_input_face"].to(self.device))
         x_s = self.live_portrait_wrapper.transform_keypoint(x_s_info)
 
-        driving_template_dct = self.make_motion_template_from_pred(batch["mapped_semantics"].copy())
+        driving_template_dct = self.make_motion_template_from_pred(batch["mapped_semantics"].copy(), batch["head_pose_weight"])
 
         x_d_i_info = driving_template_dct["motion"]
         delta_new = x_s_info['exp'].clone()
