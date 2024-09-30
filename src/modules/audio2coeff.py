@@ -32,8 +32,12 @@ class SadtalkerAudio2Coeff():
     def __call__(self, batch):
         with torch.no_grad():
             exp_pred = self.audio2exp_model(batch)
-            pose_pred = self.audio2pose_model(batch) 
 
+            if batch["ref_head_pose_path"] is None:
+                pose_pred = self.audio2pose_model(batch) 
+            else:
+                pose_pred = batch["ref_head_pose_coeff"]
+            
         pose_len = pose_pred.shape[1]
         if pose_len<13: 
             pose_len = int((pose_len-1)/2)*2+1

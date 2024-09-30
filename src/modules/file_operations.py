@@ -5,13 +5,21 @@ from scipy.io import savemat, loadmat
 
 
 class FileOperations:
-    def __init__(self, device, save_path, source_path, audio_path):
+    def __init__(self, device, save_path, source_path, audio_path, ref_head_pose_path):
         self.device = device
         self.save_path = save_path
         self.source_name = source_path.split("/")[-1].split(".")[0]
         self.audio_name = audio_path.split("/")[-1].split(".")[0]
+        self.ref_head_pose_path = ref_head_pose_path
 
         self.source_folder_path = self.create_folders_if_not_exist()
+
+        self.ref_head_pose_inputs_exist = False
+        if self.ref_head_pose_path is not None:
+            self.ref_head_pose_name = self.ref_head_pose_path.split("/")[-1].split(".")[0]
+
+            if os.path.exists(os.path.join(self.save_path, "references", self.ref_head_pose_name)):
+                self.ref_head_pose_inputs_exist = True
 
         if os.path.exists(os.path.join(self.source_folder_path, "preprocessed_inputs")):
             self.preprocessed_inputs_exist = True
@@ -32,9 +40,13 @@ class FileOperations:
                             face_crop_coords=batch["face_crop_coords"],
                             original_frame=batch["original_frame"],
                             source_coeff=batch["source_coeff"])
+            
+        if self.ref_head_pose_path is not None and not self.ref_head_pose_inputs_exist:
+            self.save_references(ref_head_pose_coeff=batch["ref_head_pose_path"])
         
     def save_inputs(self, source_type, rendering_input_face, face_crop_coords, original_frame, source_coeff):
-        input_folder_path = os.path.join(self.source_folder_path, "preprocessed_inputs")
+        input_folder_path = os.path.join(self.save_path, "references")
+        input_folder_path = os.path.join(self.save_path, "references")
         os.makedirs(input_folder_path, exist_ok=True)
 
         batch_to_save = {"source_type": source_type,
@@ -45,13 +57,27 @@ class FileOperations:
         
         savemat(os.path.join(input_folder_path, "batch.mat"), batch_to_save)
 
+    def save_references(self, ref_head_pose_coeff):
+        input_folder_path = os.path.join(self.save_path, "references", self.ref_head_pose_name)
+        os.makedirs(input_folder_path, exist_ok=True)
+
+        batch_to_save = {"source_coeff": ref_head_pose_coeff.detach().cpu().numpy()}
+        savemat(os.path.join(input_folder_path, "batch.mat"), batch_to_save)
+
     def load_inputs(self):
-        batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
-        batch_to_load = {"source_type": batch_inputs["source_type"][0],
-                         "rendering_input_face": torch.tensor(batch_inputs["rendering_input_face"]).to(self.device),
-                         "face_crop_coords": list(batch_inputs["face_crop_coords"][0]),
-                         "original_frame": batch_inputs["original_frame"],
-                         "source_coeff": torch.tensor(batch_inputs["source_coeff"]).to(self.device)}
+        batch_to_load = {}
+        if self.preprocessed_inputs_exist:
+            batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
+            batch_to_load["source_type"] = batch_inputs["source_type"][0]
+            batch_to_load["rendering_input_face"] = torch.tensor(batch_inputs["rendering_input_face"]).to(self.device)
+            batch_to_load["face_crop_coords"] = list(batch_inputs["face_crop_coords"][0])
+            batch_to_load["original_frame"] = batch_inputs["original_frame"]
+            batch_to_load["source_coeff"] = torch.tensor(batch_inputs["source_coeff"]).to(self.device)
+        
+        if self.ref_head_pose_inputs_exist:
+            ref_batch = loadmat(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat"))
+            batch_to_load["ref_head_pose_coeff"] = torch.tensor(ref_batch["ref_head_pose_coeff"]).to(self.device)
+
         return batch_to_load
 
     def save_output(self, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):
@@ -77,6 +103,7 @@ class FileOperations:
 
     def create_folders_if_not_exist(self):
         os.makedirs(self.save_path, exist_ok=True)
+        os.makedirs(os.path.join(self.save_path, "references"), exist_ok=True)
 
         source_folder_path = os.path.join(self.save_path, self.source_name)
         os.makedirs(source_folder_path, exist_ok=True)

@@ -14,7 +14,9 @@ from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, sadtalker_checkpoint_path, preprocessed_inputs_exist, use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
+    def __init__(self, device, fps, sadtalker_checkpoint_path,
+                 preprocessed_inputs_exist, ref_head_pose_inputs_exist, 
+                 use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
         self.fps = fps
         self.use_blink = use_blink
@@ -22,6 +24,7 @@ class Preprocess:
         self.syncnet_mel_step_size = syncnet_mel_step_size
         self.liveportrait_input_shape = liveportrait_input_shape
         self.preprocessed_inputs_exist = preprocessed_inputs_exist
+        self.ref_head_pose_inputs_exist = ref_head_pose_inputs_exist
 
         self.sd_prep = SadTalkerPreprocess(device=device,
                                            **sadtalker_preprocesser_cfg)
@@ -42,25 +45,68 @@ class Preprocess:
         source_type = check_source_type(batch["source_path"])
         if not self.preprocessed_inputs_exist:
             if source_type == "image":
-                img, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(source_img_path=batch["source_path"],
-                                                                                                num_frames=num_frames)
-                batch["source_type"] = source_type,
-                batch["rendering_input_face"] = face_for_rendering
-                batch["face_crop_coords"] = face_crop_coords
-                batch["original_frame"] = img
-                batch["source_coeff"] = pred_coeff
-            
+                original_frame, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(img_path=batch["source_path"],
+                                                                                                            num_frames=num_frames)
+
+            elif source_type == "video":
+                original_frame, face_for_rendering, pred_coeff, face_crop_coords = self.__image_source_call(img_path=batch["source_path"],
+                                                                                                            num_frames=num_frames)
+            batch["source_type"] = source_type,
+            batch["rendering_input_face"] = face_for_rendering
+            batch["face_crop_coords"] = face_crop_coords
+            batch["original_frame"] = original_frame
+            batch["source_coeff"] = pred_coeff
+
         blink_ratio = self.__get_blink(num_frames=num_frames)
         batch["blink_ratio"] = blink_ratio
+
+        if batch["ref_head_pose_path"] is not None and not self.ref_head_pose_inputs_exist:
+            reference_source_type = check_source_type(batch["ref_head_pose_path"])
+            if reference_source_type == "image":
+                _, _, pred_coeff, _ = self.__image_source_call(img_path=batch["ref_head_pose_path"],
+                                                            num_frames=num_frames)
+                
+            elif reference_source_type == "video":
+                _, _, pred_coeff, _ = self.__video_source_call(video_path=batch["ref_head_pose_path"],
+                                                            num_frames=num_frames)
+                
+            batch["ref_head_pose_coeff"] = pred_coeff[:, :, 64:]
+
         return batch
 
-    def __image_source_call(self, source_img_path, num_frames):
-        img = cv2.imread(source_img_path)
+    def __image_source_call(self, img_path, num_frames):
+        img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         face_for_rendering, pred_coeff, crop_for_rendering = self.__get_3dmm_coeff(img)
         pred_coeff = pred_coeff.repeat(num_frames, 1).unsqueeze(0)
         return img, face_for_rendering, pred_coeff, crop_for_rendering
+    
+    def __video_source_call(self, video_path, num_frames):
+        cap = cv2.VideoCapture(video_path)
+        num_video_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        if num_frames < num_video_frames:
+            #TODO will be added
+            print("ERR")
+
+        frame_list = []
+        pred_coeff_list = []
+        crop_for_rendering_list = []
+        face_for_rendering_list = []
+        for _ in tqdm(range(num_frames), "Predicting coeffs from video.."):
+            _, frame = cap.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            face_for_rendering, pred_coeff, crop_for_rendering = self.__get_3dmm_coeff(frame)
+
+            frame_list.append(frame)
+            pred_coeff_list.append(pred_coeff)
+            crop_for_rendering_list.append(crop_for_rendering)
+            face_for_rendering_list.append(face_for_rendering)
+
+        pred_coeff_list = torch.stack(pred_coeff_list, dim=0).unsqueeze(0)
+        face_for_rendering_list = torch.cat(face_for_rendering_list, dim=0)
+        return frame_list, face_for_rendering_list, pred_coeff_list, crop_for_rendering_list
 
     def __get_3dmm_coeff(self, frame):
         torch_inp_face, face_for_rendering, _, crop_for_rendering, _ = self.sd_prep(frame)

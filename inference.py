@@ -17,12 +17,14 @@ def main(args):
     file_operations = FileOperations(device=cfg.device,
                                      save_path=args.save_path,
                                      source_path=args.source_path,
-                                     audio_path=args.audio_path)
+                                     audio_path=args.audio_path,
+                                     ref_head_pose_path=args.ref_head_pose_path)
     
     preprocess = Preprocess(device=cfg.device,
                             fps=cfg.fps,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
                             preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
+                            ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
                             **cfg.preprocess)
     
     audio2coeff = SadtalkerAudio2Coeff(device=cfg.device,
@@ -40,12 +42,13 @@ def main(args):
     batch = {"source_path": args.source_path,
              "audio_path": args.audio_path,
              "head_pose_weight": args.head_pose_weight,
+             "ref_head_pose_path": args.ref_head_pose_path,
              "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
     
-    if file_operations.preprocessed_inputs_exist:
+    if file_operations.preprocessed_inputs_exist or file_operations.ref_head_pose_inputs_exist:
         print("Using preprocessed inputs for this source input!")
         batch = {**batch, **file_operations.load_inputs()}  
-    
+
     pipeline = [preprocess, audio2coeff, map2lp, lp_render]
     for pipe_func in pipeline:
         batch = pipe_func(batch)
@@ -60,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--audio_path", type=str, help="path to audio")
     parser.add_argument("--save_path", type=str, default="./outputs", help="path to save output video")
     parser.add_argument("--head_pose_weight", type=float, default=1., help="weight to apply head pose")
+    parser.add_argument("--ref_head_pose_path", type=str, default=None, help="path to reference head pose")
     args = parser.parse_args()
 
     main(args)
