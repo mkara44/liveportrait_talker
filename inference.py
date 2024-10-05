@@ -24,7 +24,7 @@ def main(args):
                             fps=cfg.fps,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
                             preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
-                            ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
+                            ref_head_pose_inputs_exist=None, #file_operations.ref_head_pose_inputs_exist,
                             **cfg.preprocess)
     
     audio2coeff = SadtalkerAudio2Coeff(device=cfg.device,
@@ -35,7 +35,7 @@ def main(args):
                               **cfg.map2lp)
     
     lp_render = LivePortraitRender(device=cfg.device,
-                                   liveportrait_cfg=cfg.lp_render.liveportrait_cfg)
+                                   **cfg.lp_render)
     
     print("Pipeline Objects are initialized!")
     

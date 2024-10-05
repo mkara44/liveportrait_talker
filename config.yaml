@@ -34,6 +34,7 @@ inference:
       num_kp: 21
       num_bins: 66
   lp_render:
+    driving_smooth_observation_variance: 3e-7
     liveportrait_cfg:
       models_config: ../liveportrait_talker_dev/pretrained_models/liveportrait/models.yaml
       checkpoint_F: ../liveportrait_talker_dev/pretrained_models/liveportrait/base_models/appearance_feature_extractor.pth

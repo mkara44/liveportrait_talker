@@ -68,7 +68,7 @@ def generate_blink_seq_randomly(num_frames, max_point):
         start = random.choice(range(min(10,num_frames), min(int(num_frames/2), 70))) 
         if frame_id+start+5<=num_frames - 1:
             sd_ratio[frame_id+start:frame_id+start+5, 0] = [0.5, 0.9, 1.0, 0.9, 0.5]
-            lp_ratio[frame_id+start:frame_id+start+5, 0] = [max_point, max_point*.25, 0., max_point*0.25, max_point]
+            lp_ratio[frame_id+start:frame_id+start+5, 0] = [max_point, max_point*0.5, 0., max_point*0.5, max_point]
             frame_id = frame_id+start+5
         else:
             break
