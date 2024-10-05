@@ -20,7 +20,7 @@ class MappingNet(nn.Module):
         self.pooling = nn.AdaptiveAvgPool1d(1)
         self.output_nc = descriptor_nc
 
-        self.fc_scale = nn.Linear(descriptor_nc, 1)
+        #self.fc_scale = nn.Linear(descriptor_nc, 1)
         self.fc_roll = nn.Linear(descriptor_nc, num_bins)
         self.fc_pitch = nn.Linear(descriptor_nc, num_bins)
         self.fc_yaw = nn.Linear(descriptor_nc, num_bins)
@@ -35,7 +35,7 @@ class MappingNet(nn.Module):
         out = self.pooling(out)
         out = out.view(out.shape[0], -1)
 
-        scale = self.fc_scale(out)
+        #scale = self.fc_scale(out)
         yaw = self.fc_yaw(out)
         pitch = self.fc_pitch(out)
         roll = self.fc_roll(out)
@@ -48,7 +48,7 @@ class MappingNet(nn.Module):
             'roll': roll,
             't': t,
             'exp': exp,
-            'scale': scale,
+            #'scale': scale,
         }
 
         return ret_dct

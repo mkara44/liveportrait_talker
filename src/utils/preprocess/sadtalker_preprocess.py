@@ -8,13 +8,13 @@ from facexlib.alignment import landmark_98_to_68
 
 from src.utils.preprocess.load_mats import load_lm3d
 from src.utils.preprocess.preprocess import align_img
-from src.utils.preprocess.helper import init_alignment_model
+from src.utils.preprocess.helper import init_alignment_model, calc_eye_close_ratio
+
 
 class SadTalkerPreprocess:
-    def __init__(self, device, pic_size, model_path, lm3d_mat_path, frontality_threshold):
+    def __init__(self, device, pic_size, model_path, lm3d_mat_path):
         self.device = device
         self.pic_size = pic_size
-        self.frontality_threshold = frontality_threshold
 
         self.lm3d_std = load_lm3d(lm3d_mat_path)
         self.detector = init_alignment_model('awing_fan', device=device, model_rootpath=model_path)   
@@ -29,7 +29,8 @@ class SadTalkerPreprocess:
         face_for_rendering = face.copy()
         crop_for_rendering = copy.deepcopy(crop)
 
-        landmarks = self.extract_landmarks(face)
+        landmarks, eye_close_ratio = self.extract_landmarks(face, calc_eye_ratio=True)
+        landmark_for_rendering = copy.deepcopy(landmarks)
         if landmarks is None:
             print("No landmark is detected on cropped face!")
             return None, None, None
@@ -47,29 +48,35 @@ class SadTalkerPreprocess:
         _, face, landmarks, _ = align_img(face, landmarks, self.lm3d_std)
         torch_face = torch.tensor(np.array(face)/255., dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
         face_for_rendering = torch.tensor(face_for_rendering/255., dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-        return torch_face, face_for_rendering, crop, crop_for_rendering, landmarks_ret
-
-    def extract_landmarks(self, face):
+        return torch_face, face_for_rendering, crop, crop_for_rendering, landmarks_ret, eye_close_ratio
+    
+    def extract_landmarks(self, face, calc_eye_ratio=False):
         with torch.no_grad():
             bboxes = self.det_net.detect_faces(face, 0.97)
             if len(bboxes) == 0:
                 print("No faces is detected!")
                 return None
-            
+
             bboxes = bboxes[0]
             face = face[int(bboxes[1]):int(bboxes[3]), int(bboxes[0]):int(bboxes[2]), :]
 
             landmarks = self.detector.get_landmarks(face)
-            #is_frontal = check_frontality_by_angle(landmarks, self.frontality_threshold)
+
+            eye_close_ratio = None
+            if calc_eye_ratio:
+                _landmarks = copy.deepcopy(landmarks)
+                _landmarks[:, 0] += int(bboxes[0])
+                _landmarks[:, 1] += int(bboxes[1])
+                eye_close_ratio = calc_eye_close_ratio(_landmarks[None])
 
             landmarks = landmark_98_to_68(landmarks)
             landmarks[:,0] += int(bboxes[0])
             landmarks[:,1] += int(bboxes[1])
         
-        return landmarks
+        return landmarks, eye_close_ratio
 
     def crop(self, frame):
-        landmarks = self.extract_landmarks(frame)
+        landmarks, _ = self.extract_landmarks(frame)
         if landmarks is None:
             return None, None
 

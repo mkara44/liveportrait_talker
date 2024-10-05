@@ -33,7 +33,7 @@ class Audio2Exp(nn.Module):
 
             #ref = batch['ref'][:, :, :64].repeat((1,current_mel_input.shape[1],1))           #bs T 64
             ref = batch['source_coeff'][:, :, :64][:, i:i+10]
-            ratio = batch['blink_ratio'][:, i:i+10]                               #bs T
+            ratio = batch['sadtalker_blink_ratio'][:, i:i+10]                               #bs T
 
             audiox = current_mel_input.view(-1, 1, 80, 16)                  # bs*T 1 80 16
 

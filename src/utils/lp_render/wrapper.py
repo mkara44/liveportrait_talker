@@ -10,6 +10,7 @@ import yaml
 
 from src.utils.lp_render.helper import load_model, concat_feat
 from src.utils.lp_render.camera import headpose_pred_to_degree, get_rotation_matrix
+from src.utils.preprocess.helper import calc_eye_close_ratio
 
 
 class LivePortraitWrapper(object):
@@ -163,3 +164,21 @@ class LivePortraitWrapper(object):
                         ret_dct[k] = v.float()
 
         return ret_dct
+
+    def calc_combined_eye_ratio(self, c_d_eyes_i, c_s_eyes):
+        c_d_eyes_i_tensor = torch.tensor([c_d_eyes_i[None][0][0]]).reshape(1, 1).to(self.device)
+        combined_eye_ratio_tensor = torch.cat([c_s_eyes[None], c_d_eyes_i_tensor], dim=1)
+        return combined_eye_ratio_tensor
+    
+    def retarget_eye(self, kp_source, eye_close_ratio):
+        """
+        kp_source: BxNx3
+        eye_close_ratio: Bx3
+        Return: Bx(3*num_kp)
+        """
+        feat_eye = concat_feat(kp_source, eye_close_ratio)
+
+        with torch.no_grad():
+            delta = self.stitching_retargeting_module['eye'](feat_eye)
+
+        return delta.reshape(-1, kp_source.shape[1], 3)

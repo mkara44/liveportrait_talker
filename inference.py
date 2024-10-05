@@ -41,9 +41,11 @@ def main(args):
     
     batch = {"source_path": args.source_path,
              "audio_path": args.audio_path,
-             "head_pose_weight": args.head_pose_weight,
+             "pitch_weight": args.pitch_weight,
+             "yaw_weight": args.yaw_weight,
+             "roll_weight": args.roll_weight,
              "ref_head_pose_path": args.ref_head_pose_path,
-             "time": datetime.datetime.now().strftime("%m%d%Y-%H%M%S")}
+             "time": datetime.datetime.now().strftime("%d%m%Y-%H%M%S")}
     
     if file_operations.preprocessed_inputs_exist or file_operations.ref_head_pose_inputs_exist:
         print("Using preprocessed inputs for this source input!")
@@ -62,7 +64,9 @@ if __name__ == "__main__":
     parser.add_argument("--source_path", type=str, help="path to source image/video")
     parser.add_argument("--audio_path", type=str, help="path to audio")
     parser.add_argument("--save_path", type=str, default="./outputs", help="path to save output video")
-    parser.add_argument("--head_pose_weight", type=float, default=1., help="weight to apply head pose")
+    parser.add_argument("--pitch_weight", type=float, default=1., help="weight to apply pitch head pose")
+    parser.add_argument("--yaw_weight", type=float, default=1., help="weight to apply yaw head pose")
+    parser.add_argument("--roll_weight", type=float, default=1., help="weight to apply roll head pose")
     parser.add_argument("--ref_head_pose_path", type=str, default=None, help="path to reference head pose")
     args = parser.parse_args()
 

@@ -6,6 +6,19 @@ from facexlib.utils import load_file_from_url
 from src.utils.preprocess.arch import FAN
 
 
+def calculate_distance_ratio(lmk: np.ndarray, idx1: int, idx2: int, idx3: int, idx4: int, eps: float = 1e-6) -> np.ndarray:
+    return (np.linalg.norm(lmk[:, idx1] - lmk[:, idx2], axis=1, keepdims=True) /
+            (np.linalg.norm(lmk[:, idx3] - lmk[:, idx4], axis=1, keepdims=True) + eps))
+
+def calc_eye_close_ratio(lmk, target_eye_ratio=None):
+    lefteye_close_ratio = calculate_distance_ratio(lmk, 62, 66, 60, 64)
+    righteye_close_ratio = calculate_distance_ratio(lmk, 70, 74, 68, 72)
+
+    if target_eye_ratio is not None:
+        return np.concatenate([lefteye_close_ratio, righteye_close_ratio, target_eye_ratio], axis=1)
+    else:
+        return np.concatenate([lefteye_close_ratio, righteye_close_ratio], axis=1)
+
 def check_source_type(input_path):
     input_type = None
 
@@ -43,19 +56,23 @@ def generate_blink_seq(num_frames):
             break
     return ratio 
 
-def generate_blink_seq_randomly(num_frames):
-    ratio = np.zeros((num_frames,1))
+def generate_blink_seq_randomly(num_frames, max_point):
+    sd_ratio = np.zeros((num_frames, 1))
+    lp_ratio = np.ones((num_frames, 1)) * max_point
+
     if num_frames<=20:
-        return ratio
+        return sd_ratio, lp_ratio
+    
     frame_id = 0
     while frame_id in range(num_frames):
         start = random.choice(range(min(10,num_frames), min(int(num_frames/2), 70))) 
         if frame_id+start+5<=num_frames - 1:
-            ratio[frame_id+start:frame_id+start+5, 0] = [0.5, 0.9, 1.0, 0.9, 0.5]
+            sd_ratio[frame_id+start:frame_id+start+5, 0] = [0.5, 0.9, 1.0, 0.9, 0.5]
+            lp_ratio[frame_id+start:frame_id+start+5, 0] = [max_point, max_point*.25, 0., max_point*0.25, max_point]
             frame_id = frame_id+start+5
         else:
             break
-    return ratio
+    return sd_ratio, np.repeat(lp_ratio, 2, axis=1)
 
 def voxceleb_crop_frame(frame, coords, scale_crop=1.):
     x1_hat = int(float(coords[0]) * frame.shape[1])
