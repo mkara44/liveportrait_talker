@@ -24,7 +24,7 @@ def main(args):
                             fps=cfg.fps,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
                             preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
-                            ref_head_pose_inputs_exist=None, #file_operations.ref_head_pose_inputs_exist,
+                            ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
                             **cfg.preprocess)
     
     audio2coeff = SadtalkerAudio2Coeff(device=cfg.device,
@@ -45,10 +45,10 @@ def main(args):
              "yaw_weight": args.yaw_weight,
              "roll_weight": args.roll_weight,
              "ref_head_pose_path": args.ref_head_pose_path,
+             "ref_frames_from_zero": args.ref_frames_from_zero,
              "time": datetime.datetime.now().strftime("%d%m%Y-%H%M%S")}
     
     if file_operations.preprocessed_inputs_exist or file_operations.ref_head_pose_inputs_exist:
-        print("Using preprocessed inputs for this source input!")
         batch = {**batch, **file_operations.load_inputs()}  
 
     pipeline = [preprocess, audio2coeff, map2lp, lp_render]
@@ -68,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument("--yaw_weight", type=float, default=1., help="weight to apply yaw head pose")
     parser.add_argument("--roll_weight", type=float, default=1., help="weight to apply roll head pose")
     parser.add_argument("--ref_head_pose_path", type=str, default=None, help="path to reference head pose")
+    parser.add_argument("--ref_frames_from_zero", action="store_true", help="starts reference head pose from beginning instead of random selection")
     args = parser.parse_args()
 
     main(args)

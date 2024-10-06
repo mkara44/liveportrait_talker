@@ -72,7 +72,7 @@ class Preprocess:
         batch["sadtalker_blink_ratio"] = sd_ratio
 
 
-        if batch["ref_head_pose_path"] is not None: # and not self.ref_head_pose_inputs_exist:
+        if batch["ref_head_pose_path"] is not None and not self.ref_head_pose_inputs_exist:
             reference_source_type = check_source_type(batch["ref_head_pose_path"])
             if reference_source_type == "image":
                 _, face_for_rendering, _, _, _ = self.__image_source_call(inp_path=batch["ref_head_pose_path"],
@@ -83,6 +83,7 @@ class Preprocess:
                 _, face_for_rendering, _, _ = self.__video_source_call(inp_path=batch["ref_head_pose_path"],
                                                                           num_frames=num_frames,
                                                                           do_pred_coeff=False)
+            batch["ref_source_type"] = reference_source_type
             batch["ref_rendering_input_face"] = face_for_rendering
 
         return batch
@@ -98,13 +99,11 @@ class Preprocess:
         cap = cv2.VideoCapture(inp_path)
         video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        frame_diff = video_num_frames - num_frames
-
         frame_list = []
         pred_coeff = None
         crop_for_rendering_list = []
         face_for_rendering_list = []
-        for frame_number in tqdm(range(num_frames), "Preprocessing video.."):
+        for _ in tqdm(range(video_num_frames), "Preprocessing video.."):
             _, frame = cap.read()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -118,18 +117,15 @@ class Preprocess:
             crop_for_rendering_list.append(crop_for_rendering)
             face_for_rendering_list.append(face_for_rendering)
 
-            if frame_number +  1 == video_num_frames and frame_diff < 0:
-                break
+        #while len(frame_list) > num_frames:
+        #    frame_list += frame_list[-video_num_frames:][::-1]
+        #    crop_for_rendering_list += crop_for_rendering_list[-video_num_frames:][::-1]
+        #    face_for_rendering_list += face_for_rendering_list[-video_num_frames:][::-1]
 
-        while len(frame_list) > num_frames:
-            frame_list += frame_list[-video_num_frames:][::-1]
-            crop_for_rendering_list += crop_for_rendering_list[-video_num_frames:][::-1]
-            face_for_rendering_list += face_for_rendering_list[-video_num_frames:][::-1]
+        #    print("Number of video frames are smaller than expected frame number, video frames are reversed and added!")
 
-            print("Number of video frames are smaller than expected frame number, video frames are reversed and added!")
-
-        face_for_rendering_list = torch.cat(face_for_rendering_list[:num_frames], dim=0)
-        return frame_list, face_for_rendering_list[:num_frames], pred_coeff, crop_for_rendering_list[:num_frames]
+        face_for_rendering_list = torch.cat(face_for_rendering_list, dim=0)
+        return frame_list, face_for_rendering_list, pred_coeff, crop_for_rendering_list
 
     def __get_3dmm_coeff(self, frame, do_pred=True):
         torch_inp_face, face_for_rendering, _, crop_for_rendering, _, eye_close_ratio = self.sd_prep(frame)

@@ -14,15 +14,14 @@ class FileOperations:
 
         self.source_folder_path = self.create_folders_if_not_exist()
 
-        #self.ref_head_pose_inputs_exist = False
-        #if self.ref_head_pose_path is not None:
-        #    self.ref_head_pose_name = self.ref_head_pose_path.split("/")[-1].split(".")[0]
+        self.ref_head_pose_inputs_exist = False
+        if self.ref_head_pose_path is not None:
+            self.ref_head_pose_name = self.ref_head_pose_path.split("/")[-1].split(".")[0]
 
-        #    if os.path.exists(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat")):
-        #        self.ref_head_pose_inputs_exist = True
+            if os.path.exists(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat")):
+                self.ref_head_pose_inputs_exist = True
 
         if os.path.exists(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat")):
-            print(f"Preproseed inputs exists for {self.source_name}!")
             self.preprocessed_inputs_exist = True
         else:
             self.preprocessed_inputs_exist = False
@@ -43,8 +42,9 @@ class FileOperations:
                         original_frame=batch["original_frame"],
                         source_coeff=batch["source_coeff"])
             
-        #if self.ref_head_pose_path is not None and not self.ref_head_pose_inputs_exist:
-        #    self.save_references(ref_head_pose_coeff=batch["ref_head_pose_coeff"])
+        if self.ref_head_pose_path is not None:
+            self.save_references(source_type=batch["ref_source_type"],
+                                 ref_R_list=batch["ref_R_list"])
         
     def save_inputs(self, source_type, rendering_input_face, face_crop_coords, original_frame, source_coeff):
         input_folder_path = os.path.join(self.source_folder_path, "preprocessed_inputs")
@@ -55,11 +55,12 @@ class FileOperations:
         
         savemat(os.path.join(input_folder_path, "batch.mat"), batch_to_save)
 
-    def save_references(self, ref_head_pose_coeff):
+    def save_references(self, source_type, ref_R_list):
         input_folder_path = os.path.join(self.save_path, "references", self.ref_head_pose_name)
         os.makedirs(input_folder_path, exist_ok=True)
 
-        batch_to_save = {"pose_coeff": ref_head_pose_coeff[0, 0].detach().cpu().numpy()}
+        batch_to_save = {"source_type": source_type,
+                         "ref_R_list": [R.detach().cpu().numpy() for R in ref_R_list]}
         savemat(os.path.join(input_folder_path, "batch.mat"), batch_to_save)
 
     def load_inputs(self):
@@ -68,10 +69,14 @@ class FileOperations:
             batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
             batch_to_load["source_type"] = batch_inputs["source_type"][0]
             batch_to_load["source_coeff"] = torch.tensor(batch_inputs["source_coeff"]).to(self.device)
+            print("Using existing inputs for this source input!")
+
         
-        #if self.ref_head_pose_inputs_exist:
-        #    ref_batch = loadmat(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat"))
-        #    batch_to_load["ref_head_pose_coeff"] = torch.tensor(ref_batch["pose_coeff"]).to(self.device)
+        if self.ref_head_pose_inputs_exist:
+            ref_batch = loadmat(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat"))
+            batch_to_load["ref_source_type"] = ref_batch["source_type"][0]
+            batch_to_load["ref_R_list"] = [torch.tensor(R).to(self.device) for R in ref_batch["ref_R_list"]]
+            print("Using existing inputs for this reference input!")
 
         return batch_to_load
 

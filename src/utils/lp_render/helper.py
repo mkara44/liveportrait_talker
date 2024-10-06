@@ -1,4 +1,5 @@
 import torch
+import random
 import pickle as pkl
 from collections import OrderedDict
 from typing import Union
@@ -12,6 +13,13 @@ from src.models.warping_network import WarpingNetwork
 from src.models.spade_generator import SPADEDecoder
 from src.models.stitching_retargeting_network import StitchingRetargetingNetwork
 
+
+def get_reference_frames(ref_R_list, n_frames, ref_frames_from_zero):
+    if ref_frames_from_zero:
+        start_frame_number = 0
+    else:
+        start_frame_number = random.randint(0, len(ref_R_list)-n_frames-1)
+    return ref_R_list[start_frame_number:start_frame_number+n_frames]
 
 def smooth(x_d_lst, shape, device, observation_variance=3e-7, process_variance=1e-5):
     x_d_lst_reshape = [x.reshape(-1) for x in x_d_lst]
