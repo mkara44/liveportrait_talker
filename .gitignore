@@ -167,3 +167,5 @@ test.png
 outputs/
 *.png
 *.mat
+playground.py
+*.drawio

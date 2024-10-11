@@ -52,5 +52,5 @@ class SadtalkerAudio2Coeff():
             """
         pose_pred = batch["source_coeff"][:, :, 64:]
         coeffs_pred = torch.cat((exp_pred, pose_pred), dim=-1)            #bs T 70
-        batch["predicted_coeffs"] = coeffs_pred[0]
+        batch["predicted_coeffs"] = exp_pred[0]
         return batch

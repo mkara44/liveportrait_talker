@@ -13,7 +13,7 @@ from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, sadtalker_checkpoint_path,
+    def __init__(self, device, fps, no_crop, sadtalker_checkpoint_path,
                  preprocessed_inputs_exist, ref_head_pose_inputs_exist, 
                  use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
@@ -26,6 +26,7 @@ class Preprocess:
         self.ref_head_pose_inputs_exist = ref_head_pose_inputs_exist
 
         self.sd_prep = SadTalkerPreprocess(device=device,
+                                           no_crop=no_crop,
                                            **sadtalker_preprocesser_cfg)
         
         self.__load_3dmm_coeff_model(sadtalker_checkpoint_path=sadtalker_checkpoint_path)
@@ -42,7 +43,7 @@ class Preprocess:
         batch["num_frames"] = num_frames
 
         source_type = check_source_type(batch["source_path"])
-        do_pred_coeff = True if not self.preprocessed_inputs_exist else False
+        do_pred_coeff = True #if not self.preprocessed_inputs_exist else False
         if source_type == "image":
             original_frame, face_for_rendering, pred_coeff, face_crop_coords, eye_close_ratio = self.__image_source_call(inp_path=batch["source_path"],
                                                                                                                          num_frames=num_frames,
@@ -82,7 +83,8 @@ class Preprocess:
             elif reference_source_type == "video":
                 _, face_for_rendering, _, _ = self.__video_source_call(inp_path=batch["ref_head_pose_path"],
                                                                           num_frames=num_frames,
-                                                                          do_pred_coeff=False)
+                                                                          do_pred_coeff=False,
+                                                                          source=False)
             batch["ref_source_type"] = reference_source_type
             batch["ref_rendering_input_face"] = face_for_rendering
 
@@ -95,9 +97,9 @@ class Preprocess:
         face_for_rendering, pred_coeff, crop_for_rendering, eye_close_ratio = self.__get_3dmm_coeff(img, do_pred=do_pred_coeff)
         return [img]*num_frames, face_for_rendering, pred_coeff, [crop_for_rendering]*num_frames, eye_close_ratio
     
-    def __video_source_call(self, inp_path, num_frames, do_pred_coeff):
+    def __video_source_call(self, inp_path, num_frames, do_pred_coeff, source=True):
         cap = cv2.VideoCapture(inp_path)
-        video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not source else num_frames
 
         frame_list = []
         pred_coeff = None

@@ -14,6 +14,20 @@ from src.models.spade_generator import SPADEDecoder
 from src.models.stitching_retargeting_network import StitchingRetargetingNetwork
 
 
+def retarget_pupil(delta_new, pupil_x, pupil_y):
+    # open for improvements
+    if 0 < pupil_x:
+        delta_new[:, 11, 0] += pupil_x * 0.0007
+        delta_new[:, 15, 0] += pupil_x * 0.001
+    else:
+        delta_new[:, 11, 0] += pupil_x * 0.001
+        delta_new[:, 15, 0] += pupil_x * 0.0007
+
+    delta_new[:, 11, 1] += pupil_y * -0.001
+    delta_new[:, 15, 1] += pupil_y * -0.001
+    return delta_new
+
+
 def get_reference_frames(ref_R_list, n_frames, ref_frames_from_zero):
     if ref_frames_from_zero:
         start_frame_number = 0

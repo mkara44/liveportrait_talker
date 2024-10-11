@@ -26,12 +26,12 @@ inference:
         num_classes: 46
   map2lp:
     semantic_radius: 14
-    mappingnet_model_path: ../liveportrait_talker_dev/pretrained_models/mappingnet_basic_70inp_nofcnoscale.pt #mappingnet_basic_onlyexp_64inp_epoch00035.pt
+    mappingnet_model_path: ../liveportrait_talker_dev/pretrained_models/mappingnet_basic_64inp_onlylip.pt #mappingnet_basic_70inp_nofcnoscale.pt #mappingnet_basic_onlyexp_64inp_epoch00035.pt
     mappingnet_cfg: 
-      coeff_nc: 70
+      coeff_nc: 64
       descriptor_nc: 1024
       layer: 3
-      num_kp: 21
+      num_kp: 6
       num_bins: 66
   lp_render:
     driving_smooth_observation_variance: 3e-7
@@ -46,3 +46,6 @@ inference:
       mask_crop_path: ../liveportrait_talker_dev/pretrained_models/liveportrait/mask_template.png
       lip_array_pkl_path: ../liveportrait_talker_dev/pretrained_models/liveportrait/lip_array.pkl
       driving_multiplier: 1.0
+    synthetic_headpose_generation_cfg:
+      window_size: 7
+      threshold: 0.02

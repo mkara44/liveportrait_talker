@@ -12,25 +12,29 @@ from src.utils.preprocess.helper import init_alignment_model, calc_eye_close_rat
 
 
 class SadTalkerPreprocess:
-    def __init__(self, device, pic_size, model_path, lm3d_mat_path):
+    def __init__(self, device, pic_size, model_path, lm3d_mat_path, no_crop):
         self.device = device
         self.pic_size = pic_size
+        self.no_crop = no_crop
 
         self.lm3d_std = load_lm3d(lm3d_mat_path)
         self.detector = init_alignment_model('awing_fan', device=device, model_rootpath=model_path)   
         self.det_net = init_detection_model('retinaface_resnet50', half=False, device=device, model_rootpath=model_path) 
 
     def __call__(self, frame):
-        face, crop = self.crop(frame)
-        if face is None or crop is None:
-            return None, None, None
+        if not self.no_crop:
+            face, crop = self.crop(frame)
+            if face is None or crop is None:
+                return None, None, None
+        else:
+            face = frame
+            crop = [0, 0, face.shape[1], face.shape[0]]
 
         face = cv2.resize(face, (self.pic_size, self.pic_size))
         face_for_rendering = face.copy()
         crop_for_rendering = copy.deepcopy(crop)
 
         landmarks, eye_close_ratio = self.extract_landmarks(face, calc_eye_ratio=True)
-        landmark_for_rendering = copy.deepcopy(landmarks)
         if landmarks is None:
             print("No landmark is detected on cropped face!")
             return None, None, None

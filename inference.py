@@ -22,6 +22,7 @@ def main(args):
     
     preprocess = Preprocess(device=cfg.device,
                             fps=cfg.fps,
+                            no_crop=args.no_crop,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
                             preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
                             ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
@@ -35,15 +36,17 @@ def main(args):
                               **cfg.map2lp)
     
     lp_render = LivePortraitRender(device=cfg.device,
+                                   fps=cfg.fps,
+                                   instant_save_func=file_operations.instant_save_input,
                                    **cfg.lp_render)
     
     print("Pipeline Objects are initialized!")
     
     batch = {"source_path": args.source_path,
              "audio_path": args.audio_path,
-             "pitch_weight": args.pitch_weight,
-             "yaw_weight": args.yaw_weight,
-             "roll_weight": args.roll_weight,
+             "still": args.still,
+             "pupil_x": args.pupil_x,
+             "pupil_y": args.pupil_y,
              "ref_head_pose_path": args.ref_head_pose_path,
              "ref_frames_from_zero": args.ref_frames_from_zero,
              "time": datetime.datetime.now().strftime("%d%m%Y-%H%M%S")}
@@ -64,9 +67,10 @@ if __name__ == "__main__":
     parser.add_argument("--source_path", type=str, help="path to source image/video")
     parser.add_argument("--audio_path", type=str, help="path to audio")
     parser.add_argument("--save_path", type=str, default="./outputs", help="path to save output video")
-    parser.add_argument("--pitch_weight", type=float, default=1., help="weight to apply pitch head pose")
-    parser.add_argument("--yaw_weight", type=float, default=1., help="weight to apply yaw head pose")
-    parser.add_argument("--roll_weight", type=float, default=1., help="weight to apply roll head pose")
+    parser.add_argument("--no_crop", action="store_true", help="flag for cropping")
+    parser.add_argument("--still", action="store_true", help="keeps head stable")
+    parser.add_argument("--pupil_x", type=float, default=0., help="pupil retargeting value in x axis")
+    parser.add_argument("--pupil_y", type=float, default=0., help="pupil retargeting value in y axis")
     parser.add_argument("--ref_head_pose_path", type=str, default=None, help="path to reference head pose")
     parser.add_argument("--ref_frames_from_zero", action="store_true", help="starts reference head pose from beginning instead of random selection")
     args = parser.parse_args()

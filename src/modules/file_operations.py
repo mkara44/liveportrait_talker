@@ -27,8 +27,8 @@ class FileOperations:
             self.preprocessed_inputs_exist = False
 
     def save(self, batch):
-        self.save_output(source_type=batch["source_type"],
-                         ref_head_pose_path=batch["ref_head_pose_path"],
+        self.save_output(still=batch["still"],
+                         source_type=batch["source_type"],
                          rendered_frame_list=batch["rendered_frame_list"],
                          num_frames=batch["num_frames"],
                          time=batch["time"],
@@ -36,24 +36,39 @@ class FileOperations:
                          original_frame=batch["original_frame"],
                          face_crop_coords=batch["face_crop_coords"])
         
-        self.save_inputs(source_type=batch["source_type"],
-                        rendering_input_face=batch["rendering_input_face"],
-                        face_crop_coords=batch["face_crop_coords"],
-                        original_frame=batch["original_frame"],
-                        source_coeff=batch["source_coeff"])
+        #self.save_inputs(source_type=batch["source_type"],
+        #                rendering_input_face=batch["rendering_input_face"],
+        #                face_crop_coords=batch["face_crop_coords"],
+        #                original_frame=batch["original_frame"],
+        #                source_coeff=batch["source_coeff"])
             
         if self.ref_head_pose_path is not None:
             self.save_references(source_type=batch["ref_source_type"],
                                  ref_R_list=batch["ref_R_list"])
         
-    def save_inputs(self, source_type, rendering_input_face, face_crop_coords, original_frame, source_coeff):
+    def instant_save_input(self, source_type, source_coeff, source_eye_close_ratio, x_s_i_info, R_s_i, f_s_i, x_s_i):
         input_folder_path = os.path.join(self.source_folder_path, "preprocessed_inputs")
         os.makedirs(input_folder_path, exist_ok=True)
 
         batch_to_save = {"source_type": source_type,
-                         "source_coeff": source_coeff[0, 0, :].unsqueeze(0).detach().cpu().numpy()}
+                         "source_coeff": source_coeff[0, 0, :].unsqueeze(0).detach().cpu().numpy(),
+                         "source_eye_close_ratio": source_eye_close_ratio[0].unsqueeze(0).detach().cpu().numpy(),
+                         "x_s_i_info": {k: [] for k in x_s_i_info.keys()},
+                         "R_s_i": [],
+                         "f_s_i": [],
+                         "x_s_i": []}
+
+        file_save_path = os.path.join(input_folder_path, "batch.mat")
+        if os.path.exists(file_save_path):
+            batch_to_save = loadmat(file_save_path)
+
+        batch_to_save["R_s_i"].append(R_s_i.detach().cpu().numpy())
+        batch_to_save["f_s_i"].append(f_s_i.detach().cpu().numpy())
+        batch_to_save["x_s_i"].append(x_s_i.detach().cpu().numpy())
+        for k, v in x_s_i_info.items():
+            batch_to_save["x_s_i_info"][k].append(v.detach().cpu().numpy())
         
-        savemat(os.path.join(input_folder_path, "batch.mat"), batch_to_save)
+        savemat(file_save_path, batch_to_save)
 
     def save_references(self, source_type, ref_R_list):
         input_folder_path = os.path.join(self.save_path, "references", self.ref_head_pose_name)
@@ -65,10 +80,15 @@ class FileOperations:
 
     def load_inputs(self):
         batch_to_load = {}
-        if self.preprocessed_inputs_exist:
+        if False: #self.preprocessed_inputs_exist:
             batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
             batch_to_load["source_type"] = batch_inputs["source_type"][0]
             batch_to_load["source_coeff"] = torch.tensor(batch_inputs["source_coeff"]).to(self.device)
+            batch_to_load["source_eye_close_ratio"] = torch.tensor(batch_inputs["source_eye_close_ratio"]).to(self.device)
+            batch_to_load["x_s_i_info"] = {k: torch.tensor(v).to(self.device) for k, v in batch_inputs["x_s_i_info"]}
+            batch_to_load["R_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["R_s_i"]]
+            batch_to_load["f_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["f_s_i"]]
+            batch_to_load["x_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["x_s_i"]]
             print("Using existing inputs for this source input!")
 
         
@@ -80,7 +100,7 @@ class FileOperations:
 
         return batch_to_load
 
-    def save_output(self, source_type, ref_head_pose_path, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):
+    def save_output(self, still, source_type, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):
         tmp_folder_path = os.path.join(self.source_folder_path, "tmp")
         os.makedirs(tmp_folder_path)
 
@@ -88,7 +108,7 @@ class FileOperations:
         for idx, rendered_frame in enumerate(rendered_frame_list):
             rendered_frame = (rendered_frame[0].permute(1,2,0).detach().cpu().numpy()*255).astype("uint8")
 
-            if source_type == "video" or (source_type == "image" and ref_head_pose_path is None):
+            if source_type == "video" or (source_type == "image" and still):
                 resized_rendered_frame = cv2.resize(rendered_frame,
                                                     (face_crop_coords[idx][2]-face_crop_coords[idx][0], face_crop_coords[idx][3]-face_crop_coords[idx][1]))
                 original_frame[idx][face_crop_coords[idx][1]:face_crop_coords[idx][3],

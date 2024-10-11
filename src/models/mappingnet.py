@@ -21,10 +21,10 @@ class MappingNet(nn.Module):
         self.output_nc = descriptor_nc
 
         #self.fc_scale = nn.Linear(descriptor_nc, 1)
-        self.fc_roll = nn.Linear(descriptor_nc, num_bins)
-        self.fc_pitch = nn.Linear(descriptor_nc, num_bins)
-        self.fc_yaw = nn.Linear(descriptor_nc, num_bins)
-        self.fc_t = nn.Linear(descriptor_nc, 3)
+        #self.fc_roll = nn.Linear(descriptor_nc, num_bins)
+        #self.fc_pitch = nn.Linear(descriptor_nc, num_bins)
+        #self.fc_yaw = nn.Linear(descriptor_nc, num_bins)
+        #self.fc_t = nn.Linear(descriptor_nc, 3)
         self.fc_exp = nn.Linear(descriptor_nc, 3*num_kp)
 
     def forward(self, input_3dmm):
@@ -36,17 +36,17 @@ class MappingNet(nn.Module):
         out = out.view(out.shape[0], -1)
 
         #scale = self.fc_scale(out)
-        yaw = self.fc_yaw(out)
-        pitch = self.fc_pitch(out)
-        roll = self.fc_roll(out)
-        t = self.fc_t(out)
+        #yaw = self.fc_yaw(out)
+        #pitch = self.fc_pitch(out)
+        #roll = self.fc_roll(out)
+        #t = self.fc_t(out)
         exp = self.fc_exp(out)
 
         ret_dct = {
-            'pitch': pitch,
-            'yaw': yaw,
-            'roll': roll,
-            't': t,
+            #'pitch': pitch,
+            #'yaw': yaw,
+            #'roll': roll,
+            #'t': t,
             'exp': exp,
             #'scale': scale,
         }
