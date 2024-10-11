@@ -165,7 +165,6 @@ test_videos/
 test.png
 .DS_Store
 outputs/
-*.png
 *.mat
 playground.py
 *.drawio
