@@ -1,5 +1,5 @@
 # LivePortraitTalker
-<div style="text-align:center"><img src="assets/merged.gif" /></div>.
+<div style="align:center"><img src="assets/merged.gif" /></div>
 
 ## Introduction
 This is a side project combining the pretrained models of [SadTalker](https://arxiv.org/abs/2211.12194) and [LivePortrait](https://arxiv.org/abs/2407.03168).
