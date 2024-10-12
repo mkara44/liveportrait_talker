@@ -20,12 +20,6 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are u
 ## Inference
 There are couple of options to generate talking head; _still_, _synthetic head pose generation_, reference head pose, _pupil control_, _video2video_.
 
-### Still
-
-There is no head movements in this option. Only lips and blinks are generated.
-
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --still`
-
 ### Synthetic Head Pose Generation
 
 Most talking head papers, such as SadTalker, generate head poses from the input audio. However, I do not think that head poses have a common features with audio. Therefore, I proposed Synthetic Head Pose Generation without using audio. This approach can generate head poses more naturally then previous one. I will give more information about Synthetic Head Pose Generation in next sections.
@@ -41,6 +35,13 @@ This option takes reference video as a input and generates talking head using po
 This pipeline randomises the initial head pose frame, `ref_frames_from_zero` can be added if the initial frame should be 0;
 
 `python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --ref_head_pose_path <path/to/reference/video> --ref_frames_from_zero`
+
+### Still
+
+There is no head movements in this option. Only lips and blinks are generated.
+
+`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --still`
+
 
 ### Pupil Control
 
