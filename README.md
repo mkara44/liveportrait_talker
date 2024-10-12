@@ -26,9 +26,9 @@ Most talking head papers, such as SadTalker, generate head poses from the input 
 
 `python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder>`
 
-<p align="center">
-  <video src="https://github.com/mkara44/liveportrait_talker/blob/7ad17e1d172cd94cb9d8d64eee1c6908a7b97c39/assets/test_voice_12102024-095528.mp4" alt="Yann Lecunn Synthetic Pose Generation Result">
-</p>
+<div align="center">
+<video src="./assets/test_voice_12102024-095528.mp4" width="320" height="240" controls></video>
+</div>
 
 ### Reference Head Pose
 
