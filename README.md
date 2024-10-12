@@ -26,6 +26,10 @@ Most talking head papers, such as SadTalker, generate head poses from the input 
 
 `python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder>`
 
+<p align="center">
+  <video src="https://github.com/031ed305-21f9-47ae-be6b-cf86fcf258f1" alt="Yann Lecunn Synthetic Pose Generation Result">
+</p>
+
 ### Reference Head Pose
 
 This option takes reference video as a input and generates talking head using poses of the person from the reference video. Once reference video is processed, head poses are saved to be used for next generation to increase inference speed. In some cases input audio and the reference head poses can be irrelevant, therefore should be used with more stable reference head poses.
