@@ -50,7 +50,7 @@ class Preprocess:
                                                                                                                          no_crop=batch["no_crop"])
             
             eye_close_ratio = torch.tensor(eye_close_ratio, dtype=torch.float32).repeat(num_frames, 1).to(self.device)
-            sd_ratio, lp_ratio = self.__get_blink(num_frames=num_frames, max_point=eye_close_ratio.max().detach().cpu().item())
+            sd_ratio, lp_ratio = self.__get_blink(num_frames=num_frames, eye_close_ratio=eye_close_ratio.detach().cpu().numpy()) #max_point=eye_close_ratio.max().detach().cpu().item())
 
             batch["source_eye_close_ratio"] = eye_close_ratio
             batch["liveportrait_blink_ratio"] = lp_ratio
@@ -165,13 +165,20 @@ class Preprocess:
         indiv_mels = torch.FloatTensor(indiv_mels).unsqueeze(1).unsqueeze(0)
         return indiv_mels.to(self.device), num_frames
     
-    def __get_blink(self, num_frames, max_point=1):
-        sd_ratio, lp_ratio = generate_blink_seq_randomly(num_frames, max_point=max_point)
+    def __get_blink(self, num_frames, eye_close_ratio=1):
+        left_eye_max = eye_close_ratio[:, :1].max()
+        right_eye_max = eye_close_ratio[: 1:].max()
+
+        sd_ratio, left_lp_ratio = generate_blink_seq_randomly(num_frames, max_point=left_eye_max)
+        _, right_lp_ratio = generate_blink_seq_randomly(num_frames, max_point=right_eye_max)
+
         if self.use_blink:
             sd_ratio = torch.FloatTensor(sd_ratio).unsqueeze(0).fill_(0.).to(self.device)
-            lp_ratio = torch.FloatTensor(lp_ratio).to(self.device)
+            left_lp_ratio = torch.FloatTensor(left_lp_ratio).to(self.device)
+            right_lp_ratio = torch.FloatTensor(right_lp_ratio).to(self.device)
         else:
             sd_ratio = torch.FloatTensor(sd_ratio).unsqueeze(0).fill_(0.).to(self.device) 
-            lp_ratio = torch.FloatTensor(lp_ratio).fill_(max_point).to(self.device) 
+            left_lp_ratio = torch.FloatTensor(left_lp_ratio).fill_(left_eye_max).to(self.device) 
+            right_lp_ratio = torch.FloatTensor(right_lp_ratio).fill_(right_eye_max).to(self.device) 
 
-        return sd_ratio, lp_ratio
+        return sd_ratio, torch.cat([left_lp_ratio, right_lp_ratio], dim=1)

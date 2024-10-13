@@ -1,7 +1,7 @@
 # LivePortraitTalker
 LivePortraitTalker is a zero-shot talking head generation approach. It combines the pretrained models of [SadTalker](https://arxiv.org/abs/2211.12194) and [LivePortrait](https://arxiv.org/abs/2407.03168). Novelty of this repo;
 - Training the mapping network of Sadtalker for LivePortrait rendering networks.
-- This repo propose sythetic head pose generation which uses the inital head pose's and mappingnet outputs. 
+- This repo propose synthetic head pose generation which uses the inital head pose's and mappingnet outputs. 
 
 This is just Proof of Concept of the approach, the model is only trained on 2% of the VoxCeleb2 dataset.
 
