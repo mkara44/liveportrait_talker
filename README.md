@@ -7,14 +7,14 @@ This is just Proof of Concept of the approach, the model is only trained on 2% o
 
 <p align="center">
   <img src="./assets/merged.gif" alt="showcase">
-  <i>Outputs of LivePortraitTalker</i>
+  <br /><i>Outputs of LivePortraitTalker</i>
 </p>
 
 ## Introduction
 
 <p align="center">
   <img src="./assets/arch.png" alt="LivePortraitTalker Architecture">
-    <i>Model Diagram</i>
+    <br /><i>Model Diagram</i>
 </p>
 
 The pretrained models in the green boxes are from Sadtalker, the red boxes are from LivePortrait repository. The MappintNet architecture in the purple box is taken from Sadtalker and trained. The VoxCeleb2 dataset was used to train MappingNet. Due to GPU prices, the model was trained using approximately 2000 videos (<2% of the dataset). Therefore, the results may not be consistent and high quality. However, this work proves the concept. 
