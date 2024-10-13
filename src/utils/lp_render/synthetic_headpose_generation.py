@@ -20,20 +20,26 @@ class SyntheticHeadPoseGeneration:
         self.window_size = window_size
         self.threshold = threshold
 
-    def __call__(self, lower_upper_lip_expressions):
+    def __call__(self, num_frames, lower_upper_lip_expressions, source_info):
+        t = torch.linspace(0, int(num_frames/self.fps), num_frames)
+        if t.shape[0] < num_frames:
+            t = torch.cat([t, t[-1].unsqueeze(0).repeat(1, num_frames-t.shape[0])], dim=-1)
+        else:
+            t = t[:num_frames]
+
+        eased_t = ease_in_out_sine(t)
         weight_list = self.get_lip_based_weight_list(lower_upper_lip_expressions=lower_upper_lip_expressions)
 
-        pitch_values = self.generate_head_moves(lower_upper_lip_expressions.shape[0],
-                                                degree=random.uniform(0., 3.), #degree_hash["pitch_degree"],
-                                                frequency=random.uniform(.5, 1.5)) * weight_list
-        yaw_values = self.generate_head_moves(lower_upper_lip_expressions.shape[0],
-                                                degree=random.uniform(0., 3.), #degree_hash["yaw_degree"],
-                                                frequency=random.uniform(.5, 1.5)) * weight_list
-        roll_values = self.generate_head_moves(lower_upper_lip_expressions.shape[0],
-                                                degree=random.uniform(0., 3.), #degree_hash["roll_degree"],
-                                                frequency=random.uniform(.5, 1.5)) * weight_list
+        pose_hash = {"pitch": None, "yaw": None, "roll": None}
+        for pose_name in pose_hash.keys():
+            value = self.generate_head_moves(t=t,
+                                             degree=random.uniform(0., 3.),
+                                             frequency=random.uniform(.5, 1.5),
+                                             eased_t=eased_t)
+            value = (value * weight_list) + source_info[pose_name][0, 0].detach().cpu().numpy()
+            pose_hash[pose_name] = value
 
-        R = get_rotation_matrix(pitch_values, yaw_values, roll_values)
+        R = get_rotation_matrix(pose_hash["pitch"], pose_hash["yaw"], pose_hash["roll"])
         return R.to(self.device)
 
     def smooth_weight_list(self, weight_list):
@@ -59,18 +65,9 @@ class SyntheticHeadPoseGeneration:
         smoothed_weight_list = self.smooth_weight_list(weight_list)
         return smoothed_weight_list
 
-    def generate_head_moves(self, num_frames, degree, frequency):
-        t = torch.linspace(0, int(num_frames/self.fps), num_frames)
-        if t.shape[0] < num_frames:
-            t = torch.cat([t, t[-1].unsqueeze(0).repeat(1, num_frames-t.shape[0])], dim=-1)
-        else:
-            t = t[:num_frames]
-
-        eased_t = ease_in_out_sine(t)
-
+    def generate_head_moves(self, t, degree, frequency, eased_t):
         base_movement = degree * torch.sin(2 * math.pi * frequency * t)
         micro_movement = degree * 0.05 * torch.randn_like(t)
         values = base_movement * eased_t + micro_movement
         values = torch.clamp(values, -degree, degree)
-
         return values

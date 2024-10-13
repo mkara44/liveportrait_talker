@@ -79,16 +79,13 @@ class LivePortraitRender:
      
         driving_template_dct = self.make_motion_template_from_pred(pred=batch["mapped_semantics"].copy())
         
-        if source_type == "image":
-            if ref_head_pose_path is not None:
-                if ref_R_list is None:
-                    ref_R_list = self.make_ref_head_pose_template(ref_rendering_input_face.to(self.device))
-                    batch["ref_R_list"] = ref_R_list
+        if ref_head_pose_path is not None:
+            if ref_R_list is None:
+                ref_R_list = self.make_ref_head_pose_template(ref_rendering_input_face.to(self.device))
+                batch["ref_R_list"] = ref_R_list
 
-                ref_R_list = get_reference_frames(ref_R_list=ref_R_list, n_frames=n_frames, ref_frames_from_zero=ref_frames_from_zero)
-            
-            elif not still:
-                ref_R_list = self.synthetic_headpose_generation(lower_upper_lip_expressions=driving_template_dct["motion"]["exp"][:, [19,20], :]) # "roll_frequency":.8})
+            ref_R_list = get_reference_frames(ref_R_list=ref_R_list, n_frames=n_frames, ref_frames_from_zero=ref_frames_from_zero)
+
         
         x_d_exp_lst_smooth = None
         rendered_frame_list = []
@@ -104,6 +101,16 @@ class LivePortraitRender:
             elif source_type == "image" and i == 0:
                 x_s_i_info, R_s_i, f_s_i, x_s_i = self.predict_source_inputs(rendering_input_face=rendering_input_face)
                 #self.instant_save_func(source_type=source_type, source_coeff=source_coeff, source_eye_close_ratio=source_eye_close_ratio, x_s_i_info=x_s_i_info, R_s_i=R_s_i, f_s_i=f_s_i, x_s_i=x_s_i)
+
+                if not still:
+                    if ref_R_list is None:
+                        ref_R_list = self.synthetic_headpose_generation(num_frames=n_frames,
+                                                                        lower_upper_lip_expressions=driving_template_dct["motion"]["exp"][:, [19,20], :],
+                                                                        source_info=x_s_i_info)
+
+                    else:
+                        ref_R_list = [R.detach().cpu().numpy() for R in ref_R_list]
+                        ref_R_list = smooth(ref_R_list, R_s_i.shape, self.device, self.driving_smooth_observation_variance)
 
             x_c_s_i = x_s_i_info["kp"]
             delta_new = x_s_i_info['exp'].clone()

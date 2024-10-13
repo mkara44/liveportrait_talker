@@ -13,7 +13,7 @@ from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, no_crop, sadtalker_checkpoint_path,
+    def __init__(self, device, fps, sadtalker_checkpoint_path,
                  preprocessed_inputs_exist, ref_head_pose_inputs_exist, 
                  use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
@@ -26,7 +26,6 @@ class Preprocess:
         self.ref_head_pose_inputs_exist = ref_head_pose_inputs_exist
 
         self.sd_prep = SadTalkerPreprocess(device=device,
-                                           no_crop=no_crop,
                                            **sadtalker_preprocesser_cfg)
         
         self.__load_3dmm_coeff_model(sadtalker_checkpoint_path=sadtalker_checkpoint_path)
@@ -47,7 +46,8 @@ class Preprocess:
         if source_type == "image":
             original_frame, face_for_rendering, pred_coeff, face_crop_coords, eye_close_ratio = self.__image_source_call(inp_path=batch["source_path"],
                                                                                                                          num_frames=num_frames,
-                                                                                                                         do_pred_coeff=do_pred_coeff)
+                                                                                                                         do_pred_coeff=do_pred_coeff,
+                                                                                                                         no_crop=batch["no_crop"])
             
             eye_close_ratio = torch.tensor(eye_close_ratio, dtype=torch.float32).repeat(num_frames, 1).to(self.device)
             sd_ratio, lp_ratio = self.__get_blink(num_frames=num_frames, max_point=eye_close_ratio.max().detach().cpu().item())
@@ -58,7 +58,8 @@ class Preprocess:
         elif source_type == "video":
             original_frame, face_for_rendering, pred_coeff, face_crop_coords = self.__video_source_call(inp_path=batch["source_path"],
                                                                                                         num_frames=num_frames,
-                                                                                                        do_pred_coeff=do_pred_coeff)
+                                                                                                        do_pred_coeff=do_pred_coeff,
+                                                                                                        no_crop=batch["no_crop"])
             sd_ratio, _ = self.__get_blink(num_frames=num_frames)
 
 
@@ -90,14 +91,14 @@ class Preprocess:
 
         return batch
 
-    def __image_source_call(self, inp_path, num_frames, do_pred_coeff):
+    def __image_source_call(self, inp_path, num_frames, do_pred_coeff, no_crop=False):
         img = cv2.imread(inp_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        face_for_rendering, pred_coeff, crop_for_rendering, eye_close_ratio = self.__get_3dmm_coeff(img, do_pred=do_pred_coeff)
+        face_for_rendering, pred_coeff, crop_for_rendering, eye_close_ratio = self.__get_3dmm_coeff(img, do_pred=do_pred_coeff, no_crop=no_crop)
         return [img]*num_frames, face_for_rendering, pred_coeff, [crop_for_rendering]*num_frames, eye_close_ratio
     
-    def __video_source_call(self, inp_path, num_frames, do_pred_coeff, source=True):
+    def __video_source_call(self, inp_path, num_frames, do_pred_coeff, source=True, no_crop=False):
         cap = cv2.VideoCapture(inp_path)
         video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not source else num_frames
 
@@ -110,7 +111,7 @@ class Preprocess:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             do_pred = True if pred_coeff is None and do_pred_coeff else False
-            face_for_rendering, _pred_coeff, crop_for_rendering, _ = self.__get_3dmm_coeff(frame, do_pred=do_pred)
+            face_for_rendering, _pred_coeff, crop_for_rendering, _ = self.__get_3dmm_coeff(frame, do_pred=do_pred, no_crop=no_crop)
 
             if pred_coeff is None:
                 pred_coeff = _pred_coeff
@@ -129,8 +130,8 @@ class Preprocess:
         face_for_rendering_list = torch.cat(face_for_rendering_list, dim=0)
         return frame_list, face_for_rendering_list, pred_coeff, crop_for_rendering_list
 
-    def __get_3dmm_coeff(self, frame, do_pred=True):
-        torch_inp_face, face_for_rendering, _, crop_for_rendering, _, eye_close_ratio = self.sd_prep(frame)
+    def __get_3dmm_coeff(self, frame, do_pred=True, no_crop=False):
+        torch_inp_face, face_for_rendering, _, crop_for_rendering, _, eye_close_ratio = self.sd_prep(frame, no_crop=no_crop)
         torch_inp_face = torch_inp_face.to(self.device)
 
         pred_coeff = None

@@ -46,7 +46,7 @@ class FileOperations:
             self.save_references(source_type=batch["ref_source_type"],
                                  ref_R_list=batch["ref_R_list"])
         
-    def instant_save_input(self, source_type, source_coeff, source_eye_close_ratio, x_s_i_info, R_s_i, f_s_i, x_s_i):
+    def instant_save_input(self, source_type, source_coeff, source_eye_close_ratio, face_crop_coords, x_s_i_info, R_s_i, f_s_i, x_s_i):
         input_folder_path = os.path.join(self.source_folder_path, "preprocessed_inputs")
         os.makedirs(input_folder_path, exist_ok=True)
 
@@ -54,6 +54,7 @@ class FileOperations:
                          "source_coeff": source_coeff[0, 0, :].unsqueeze(0).detach().cpu().numpy(),
                          "source_eye_close_ratio": source_eye_close_ratio[0].unsqueeze(0).detach().cpu().numpy(),
                          "x_s_i_info": {k: [] for k in x_s_i_info.keys()},
+                         "face_crop_coords": [],
                          "R_s_i": [],
                          "f_s_i": [],
                          "x_s_i": []}
@@ -62,6 +63,7 @@ class FileOperations:
         if os.path.exists(file_save_path):
             batch_to_save = loadmat(file_save_path)
 
+        batch_to_save["face_crop_coords"].append(face_crop_coords)
         batch_to_save["R_s_i"].append(R_s_i.detach().cpu().numpy())
         batch_to_save["f_s_i"].append(f_s_i.detach().cpu().numpy())
         batch_to_save["x_s_i"].append(x_s_i.detach().cpu().numpy())
@@ -117,6 +119,11 @@ class FileOperations:
             else:
                 original_frame[idx] = rendered_frame
             
+            h, w = original_frame[idx].shape[:2]
+            w -= w % 2
+            h -= h % 2
+            original_frame[idx] = cv2.resize(original_frame[idx], (w, h))
+
             cv2.imwrite(f"{tmp_folder_path}/{str(idx).zfill(len(str(num_frames)))}.png",
                         cv2.cvtColor(original_frame[idx], cv2.COLOR_RGB2BGR))
 

@@ -14,7 +14,7 @@ inference:
       lm3d_mat_path: ../liveportrait_talker_dev/pretrained_models/sadtalker
   audio2coeff:
     flag_exp: True
-    flag_pose: True
+    flag_pose: False
     audio2pose_cfg:
       cvae_cfg:
         seq_len: 32

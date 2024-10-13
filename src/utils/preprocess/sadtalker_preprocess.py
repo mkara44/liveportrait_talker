@@ -12,17 +12,16 @@ from src.utils.preprocess.helper import init_alignment_model, calc_eye_close_rat
 
 
 class SadTalkerPreprocess:
-    def __init__(self, device, pic_size, model_path, lm3d_mat_path, no_crop):
+    def __init__(self, device, pic_size, model_path, lm3d_mat_path):
         self.device = device
         self.pic_size = pic_size
-        self.no_crop = no_crop
 
         self.lm3d_std = load_lm3d(lm3d_mat_path)
         self.detector = init_alignment_model('awing_fan', device=device, model_rootpath=model_path)   
         self.det_net = init_detection_model('retinaface_resnet50', half=False, device=device, model_rootpath=model_path) 
 
-    def __call__(self, frame):
-        if not self.no_crop:
+    def __call__(self, frame, no_crop):
+        if not no_crop:
             face, crop = self.crop(frame)
             if face is None or crop is None:
                 return None, None, None

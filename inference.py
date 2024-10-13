@@ -22,7 +22,6 @@ def main(args):
     
     preprocess = Preprocess(device=cfg.device,
                             fps=cfg.fps,
-                            no_crop=args.no_crop,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
                             preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
                             ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
@@ -47,6 +46,7 @@ def main(args):
              "still": args.still,
              "pupil_x": args.pupil_x,
              "pupil_y": args.pupil_y,
+             "no_crop": args.no_crop,
              "ref_head_pose_path": args.ref_head_pose_path,
              "ref_frames_from_zero": args.ref_frames_from_zero,
              "time": datetime.datetime.now().strftime("%d%m%Y-%H%M%S")}
