@@ -169,16 +169,13 @@ class Preprocess:
         left_eye_max = eye_close_ratio[:, :1].max()
         right_eye_max = eye_close_ratio[: 1:].max()
 
-        sd_ratio, left_lp_ratio = generate_blink_seq_randomly(num_frames, max_point=left_eye_max)
-        _, right_lp_ratio = generate_blink_seq_randomly(num_frames, max_point=right_eye_max)
+        sd_ratio, lp_ratio = generate_blink_seq_randomly(num_frames, left_eye_max=left_eye_max, right_eye_max=right_eye_max)
 
         if self.use_blink:
             sd_ratio = torch.FloatTensor(sd_ratio).unsqueeze(0).fill_(0.).to(self.device)
-            left_lp_ratio = torch.FloatTensor(left_lp_ratio).to(self.device)
-            right_lp_ratio = torch.FloatTensor(right_lp_ratio).to(self.device)
+            lp_ratio = torch.FloatTensor(lp_ratio).to(self.device)
         else:
             sd_ratio = torch.FloatTensor(sd_ratio).unsqueeze(0).fill_(0.).to(self.device) 
-            left_lp_ratio = torch.FloatTensor(left_lp_ratio).fill_(left_eye_max).to(self.device) 
-            right_lp_ratio = torch.FloatTensor(right_lp_ratio).fill_(right_eye_max).to(self.device) 
+            lp_ratio = torch.FloatTensor(lp_ratio).fill_(left_eye_max).to(self.device) 
 
-        return sd_ratio, torch.cat([left_lp_ratio, right_lp_ratio], dim=1)
+        return sd_ratio, lp_ratio

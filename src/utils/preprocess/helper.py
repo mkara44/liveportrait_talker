@@ -56,23 +56,25 @@ def generate_blink_seq(num_frames):
             break
     return ratio 
 
-def generate_blink_seq_randomly(num_frames, max_point):
+def generate_blink_seq_randomly(num_frames, left_eye_max, right_eye_max):
     sd_ratio = np.zeros((num_frames, 1))
-    lp_ratio = np.ones((num_frames, 1)) * max_point
+    left_lp_ratio = np.ones((num_frames, 1)) * left_eye_max
+    right_lp_ratio = np.ones((num_frames, 1)) * right_eye_max
 
     if num_frames<=20:
-        return sd_ratio, lp_ratio
+        return sd_ratio, np.concatenate((left_lp_ratio, right_lp_ratio), axis=1)
     
     frame_id = 0
     while frame_id in range(num_frames):
         start = random.choice(range(min(10,num_frames), min(int(num_frames/2), 70))) 
         if frame_id+start+5<=num_frames - 1:
             sd_ratio[frame_id+start:frame_id+start+5, 0] = [0.5, 0.9, 1.0, 0.9, 0.5]
-            lp_ratio[frame_id+start:frame_id+start+5, 0] = [max_point, max_point*0.5, 0., max_point*0.5, max_point]
+            left_lp_ratio[frame_id+start:frame_id+start+5, 0] = [left_eye_max, left_eye_max*0.5, 0., left_eye_max*0.5, left_eye_max]
+            right_lp_ratio[frame_id+start:frame_id+start+5, 0] = [right_eye_max, right_eye_max*0.5, 0., right_eye_max*0.5, right_eye_max]
             frame_id = frame_id+start+5
         else:
             break
-    return sd_ratio, np.repeat(lp_ratio, 2, axis=1)
+    return sd_ratio, np.repeat(np.concatenate((left_lp_ratio, right_lp_ratio), axis=1), 2, axis=1)
 
 def voxceleb_crop_frame(frame, coords, scale_crop=1.):
     x1_hat = int(float(coords[0]) * frame.shape[1])
