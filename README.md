@@ -22,7 +22,7 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are f
 ## Installation
 - Python 3.9+
 - `pip install -r requirements.txt`
--  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models), or you can run following command
+-  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models) or you can run following command
 
 ```bash
 sh scripts/download_models.sh
