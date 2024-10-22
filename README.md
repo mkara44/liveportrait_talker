@@ -22,7 +22,11 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are f
 ## Installation
 - Python 3.9+
 - `pip install -r requirements.txt`
--  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models).
+-  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models), or you can run following command
+
+&emsp;&emsp; ```bash
+      sh scripts/download
+            ```
 
 ## Inference
 There are couple of options to generate talking head; _synthetic head pose generation_, _reference head pose_, _still_, _video2video_, _pupil control_.
@@ -41,11 +45,15 @@ Most talking head papers, such as SadTalker, generate head poses from the input 
 
 This option takes reference video as a input and generates talking head using poses of the person from the reference video. Once reference video is processed, head poses are saved to be used for next generation to increase inference speed. In some cases input audio and the reference head poses can be irrelevant, therefore should be used with more stable reference head poses.
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --ref_head_pose_path <path/to/reference/video>`
+```bash
+python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --ref_head_pose_path <path/to/reference/video>
+```
 
 This pipeline select the initial head pose frame randomly, `ref_frames_from_zero` can be added to set the initial frame to 0;
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --ref_head_pose_path <path/to/reference/video> --ref_frames_from_zero`
+```bash 
+python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --ref_head_pose_path <path/to/reference/video> --ref_frames_from_zero
+```
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/b771aee7-96f7-4e93-ae30-114e872d0519" type="video/mp4"> </video> 
@@ -55,7 +63,9 @@ This pipeline select the initial head pose frame randomly, `ref_frames_from_zero
 
 There is no head movements in this option. Only lips and blinks are generated.
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --still`
+```bash
+python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --still
+```
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/1e0a743c-c608-4217-94c4-6736badee171" type="video/mp4"> </video> 
@@ -65,7 +75,9 @@ There is no head movements in this option. Only lips and blinks are generated.
 
 If the video ise given as a `source_path`. The repository generates the lips using audio, while providing the head poses as the original frame.
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/video> --audio_path <path/to/audio> --save_path <path/to/save/folder>`
+```bash
+python inference.py --config_path config.yaml --source_path <path/to/source/video> --audio_path <path/to/audio> --save_path <path/to/save/folder>
+```
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/11ec02ed-cee0-4e83-bd4f-8356cdd37035" type="video/mp4"> </video> 
@@ -75,7 +87,9 @@ If the video ise given as a `source_path`. The repository generates the lips usi
 
 Unlike Sadtalker, this repository predicts only lip expressions. Therefore, other facial expression are taken from the source image. This can be problematic if the eyes in the source image are not looking directly at the camera. Thanks to the [ComfyUI-AdvancedLivePortrait](https://github.com/PowerHouseMan/ComfyUI-AdvancedLivePortrait), pupils can be aranged. 
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --pupil_x <pupil/x/number> --pupil_y <pupil/y/number>`
+```bash
+python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --pupil_x <pupil/x/number> --pupil_y <pupil/y/number>
+```
 
 ## Head Pose Generation
 will be updated

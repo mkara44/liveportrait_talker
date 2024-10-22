@@ -165,6 +165,6 @@ test_videos/
 test.png
 .DS_Store
 outputs/
-*.mat
 playground.py
 *.drawio
+pretrained_models/

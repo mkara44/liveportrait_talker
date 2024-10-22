@@ -2,7 +2,7 @@ inference:
   device: mps
   fps: 25
   batch_size: 2
-  sadtalker_checkpoint_path: ../liveportrait_talker_dev/pretrained_models/sadtalker/SadTalker_V0.0.2_256.safetensors
+  sadtalker_checkpoint_path: ./pretrained_models/sadtalker/SadTalker_V0.0.2_256.safetensors
   preprocess:
     use_blink: True
     speech_rate: 16000
@@ -10,8 +10,8 @@ inference:
     liveportrait_input_shape: 256
     sadtalker_preprocesser_cfg:
       pic_size: 256
-      model_path: ../liveportrait_talker_dev/pretrained_models/sadtalker
-      lm3d_mat_path: ../liveportrait_talker_dev/pretrained_models/sadtalker
+      model_path: ./pretrained_models/sadtalker
+      lm3d_mat_path: ./src/utils/preprocess/
   audio2coeff:
     flag_exp: True
     flag_pose: False
@@ -26,7 +26,7 @@ inference:
         num_classes: 46
   map2lp:
     semantic_radius: 14
-    mappingnet_model_path: ../liveportrait_talker_dev/pretrained_models/mappingnet_basic_64inp_onlylip.pt #mappingnet_basic_70inp_nofcnoscale.pt #mappingnet_basic_onlyexp_64inp_epoch00035.pt
+    mappingnet_model_path: ./pretrained_models/mappingnet_basic_64inp_onlylip.pt #mappingnet_basic_70inp_nofcnoscale.pt #mappingnet_basic_onlyexp_64inp_epoch00035.pt
     mappingnet_cfg: 
       coeff_nc: 64
       descriptor_nc: 1024
@@ -36,15 +36,15 @@ inference:
   lp_render:
     driving_smooth_observation_variance: 3e-7
     liveportrait_cfg:
-      models_config: ../liveportrait_talker_dev/pretrained_models/liveportrait/models.yaml
-      checkpoint_F: ../liveportrait_talker_dev/pretrained_models/liveportrait/base_models/appearance_feature_extractor.pth
-      checkpoint_M: ../liveportrait_talker_dev/pretrained_models/liveportrait/base_models/motion_extractor.pth
-      checkpoint_W: ../liveportrait_talker_dev/pretrained_models/liveportrait/base_models/warping_module.pth
-      checkpoint_G: ../liveportrait_talker_dev/pretrained_models/liveportrait/base_models/spade_generator.pth
-      checkpoint_S: ../liveportrait_talker_dev/pretrained_models/liveportrait/retargeting_models/stitching_retargeting_module.pth
+      models_config: ./src/utils/lp_render/models.yaml
+      checkpoint_F: ./pretrained_models/liveportrait/base_models/appearance_feature_extractor.pth
+      checkpoint_M: ./pretrained_models/liveportrait/base_models/motion_extractor.pth
+      checkpoint_W: ./pretrained_models/liveportrait/base_models/warping_module.pth
+      checkpoint_G: ./pretrained_models/liveportrait/base_models/spade_generator.pth
+      checkpoint_S: ./pretrained_models/liveportrait/retargeting_models/stitching_retargeting_module.pth
       flag_use_half_precision: False
-      mask_crop_path: ../liveportrait_talker_dev/pretrained_models/liveportrait/mask_template.png
-      lip_array_pkl_path: ../liveportrait_talker_dev/pretrained_models/liveportrait/lip_array.pkl
+      mask_crop_path: ./src/utils/lp_render/mask_template.png
+      lip_array_pkl_path: ./src/utils/lp_render/lip_array.pkl
       driving_multiplier: 1.0
     synthetic_headpose_generation_cfg:
       window_size: 7
