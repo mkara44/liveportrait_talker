@@ -21,8 +21,10 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are f
 
 ## Installation
 - Python 3.9+
+- Install PyTorch 2.3.0, you should install compatible version with your system requirements. You can find PyTorch 2.3.0 versions [here](https://pytorch.org/get-started/previous-versions/#v230)
 - `pip install -r requirements.txt`
--  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models) or you can run following command to install pretrained models automatically:
+- Don't forget to change device type from config file. You need to set the `inference.device` to specify the location where the model will run: use `cuda` for GPU, `cpu` for CPU, and `mps` for MacBook Silicon.
+- [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models) or you can run following command to install pretrained models automatically:
 
 ```bash
 sh scripts/download_models.sh
