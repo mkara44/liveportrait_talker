@@ -105,12 +105,12 @@ class LivePortraitRender:
                 if not still:
                     if ref_R_list is None:
                         ref_R_list = self.synthetic_headpose_generation(num_frames=n_frames,
-                                                                        lower_upper_lip_expressions=driving_template_dct["motion"]["exp"][:, [19,20], :],
+                                                                        lower_upper_lip_expressions=driving_template_dct["motion"]["exp"][:, [4, 5], :],
                                                                         source_info=x_s_i_info)
 
-                    else:
-                        ref_R_list = [R.detach().cpu().numpy() for R in ref_R_list]
-                        ref_R_list = smooth(ref_R_list, R_s_i.shape, self.device, self.driving_smooth_observation_variance)
+                    
+                    ref_R_list = [R.detach().cpu().numpy() for R in ref_R_list]
+                    ref_R_list = smooth(ref_R_list, R_s_i.shape, self.device, self.driving_smooth_observation_variance)
 
             x_c_s_i = x_s_i_info["kp"]
             delta_new = x_s_i_info['exp'].clone()
