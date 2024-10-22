@@ -24,9 +24,9 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are f
 - `pip install -r requirements.txt`
 -  [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models), or you can run following command
 
-&emsp;&emsp; ```bash
-      sh scripts/download
-            ```
+```bash
+sh scripts/download
+```
 
 ## Inference
 There are couple of options to generate talking head; _synthetic head pose generation_, _reference head pose_, _still_, _video2video_, _pupil control_.
@@ -35,7 +35,9 @@ There are couple of options to generate talking head; _synthetic head pose gener
 
 Most talking head papers, such as SadTalker, generate head poses from the input audio. However, I do not think that head poses have a common features with audio. Therefore, I proposed Synthetic Head Pose Generation without using audio. This approach can generate head poses more naturally then previous approaches. I will give more information about Synthetic Head Pose Generation in next sections.
 
-`python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder>`
+```bash 
+python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder>
+```
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/63496204-3d2c-47d1-aec5-f6b2425b602f" type="video/mp4"> </video> 
