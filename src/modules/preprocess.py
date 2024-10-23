@@ -166,8 +166,8 @@ class Preprocess:
         return indiv_mels.to(self.device), num_frames
     
     def __get_blink(self, num_frames, eye_close_ratio=1):
-        left_eye_max = eye_close_ratio[:, :1].max()
-        right_eye_max = eye_close_ratio[: 1:].max()
+        left_eye_max = eye_close_ratio[:, :1].max() if eye_close_ratio != 1 else eye_close_ratio
+        right_eye_max = eye_close_ratio[: 1:].max() if eye_close_ratio != 1 else eye_close_ratio
 
         sd_ratio, lp_ratio = generate_blink_seq_randomly(num_frames, left_eye_max=left_eye_max, right_eye_max=right_eye_max)
 
