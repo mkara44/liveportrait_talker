@@ -1,6 +1,7 @@
 import os
 import cv2
 import torch
+import shutil
 from scipy.io import savemat, loadmat
 
 
@@ -8,15 +9,15 @@ class FileOperations:
     def __init__(self, device, save_path, source_path, audio_path, ref_head_pose_path):
         self.device = device
         self.save_path = save_path
-        self.source_name = source_path.split("/")[-1].split(".")[0]
-        self.audio_name = audio_path.split("/")[-1].split(".")[0]
+        self.source_name = source_path.split(os.sep)[-1].split(".")[0]
+        self.audio_name = audio_path.split(os.sep)[-1].split(".")[0]
         self.ref_head_pose_path = ref_head_pose_path
 
         self.source_folder_path = self.create_folders_if_not_exist()
 
         self.ref_head_pose_inputs_exist = False
         if self.ref_head_pose_path is not None:
-            self.ref_head_pose_name = self.ref_head_pose_path.split("/")[-1].split(".")[0]
+            self.ref_head_pose_name = self.ref_head_pose_path.split(os.sep)[-1].split(".")[0]
 
             if os.path.exists(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat")):
                 self.ref_head_pose_inputs_exist = True
@@ -104,6 +105,9 @@ class FileOperations:
 
     def save_output(self, still, source_type, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):
         tmp_folder_path = os.path.join(self.source_folder_path, "tmp")
+        if os.path.exists(tmp_folder_path):
+            shutil.rmtree(tmp_folder_path)
+
         os.makedirs(tmp_folder_path)
 
         video_name = f"{self.audio_name}_{time}.mp4"
@@ -124,13 +128,13 @@ class FileOperations:
             h -= h % 2
             original_frame[idx] = cv2.resize(original_frame[idx], (w, h))
 
-            cv2.imwrite(f"{tmp_folder_path}/{str(idx).zfill(len(str(num_frames)))}.png",
-                        cv2.cvtColor(original_frame[idx], cv2.COLOR_RGB2BGR))
+            cv2.imwrite(os.path.join(tmp_folder_path, f"{str(idx).zfill(len(str(num_frames)))}.png"), cv2.cvtColor(original_frame[idx], cv2.COLOR_RGB2BGR))
 
-        os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{tmp_folder_path}/*.png' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
-        os.system(f"rm -rf {tmp_folder_path}")
+        os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{os.path.join(tmp_folder_path, '*.png')}' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
+        shutil.rmtree(tmp_folder_path)
+
         os.system(f"ffmpeg -hide_banner -loglevel error -i {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))} -i {audio_path} -map 0:v -map 1:a -c:v copy -shortest {os.path.join(self.source_folder_path, video_name)}")
-        os.system(f"rm -rf {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
+        os.remove(os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4')))
 
     def create_folders_if_not_exist(self):
         os.makedirs(self.save_path, exist_ok=True)

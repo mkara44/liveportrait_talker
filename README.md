@@ -23,6 +23,7 @@ The pretrained models in the green boxes are from Sadtalker, the red boxes are f
 - Python 3.10+
 - Install PyTorch 2.3.0, you should install compatible version with your system requirements. You can find PyTorch 2.3.0 versions [here](https://pytorch.org/get-started/previous-versions/#v230)
 - `pip install -r requirements.txt`
+- [FFmpeg](https://www.ffmpeg.org/) need to be installed.
 - [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models) or you can run following command to install pretrained models automatically:
 
 ```bash
