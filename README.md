@@ -20,10 +20,9 @@ This is just Proof of Concept of the approach, the model is only trained on 2% o
 The pretrained models in the green boxes are from Sadtalker, the red boxes are from LivePortrait repository. The MappintNet architecture in the purple box is taken from Sadtalker and trained. The VoxCeleb2 dataset was used to train MappingNet. Due to GPU prices, the model was trained using approximately 2000 videos (<2% of the dataset). Therefore, the results may not be consistent and high quality. However, this work proves the concept. 
 
 ## Installation
-- Python 3.9+
+- Python 3.10+
 - Install PyTorch 2.3.0, you should install compatible version with your system requirements. You can find PyTorch 2.3.0 versions [here](https://pytorch.org/get-started/previous-versions/#v230)
 - `pip install -r requirements.txt`
-- Don't forget to change device type from config file. You need to set the `inference.device` to specify the location where the model will run: use `cuda` for GPU, `cpu` for CPU, and `mps` for MacBook Silicon.
 - [Sadtalker](https://github.com/OpenTalker/SadTalker/tree/main) and [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main) pretrained models must be downloaded from their repository. MappingNet can be downloaded from [here](https://huggingface.co/mustafakara/liveportrait_talker/tree/main/pretrained_models) or you can run following command to install pretrained models automatically:
 
 ```bash
@@ -32,6 +31,8 @@ sh scripts/download_models.sh
 
 ## Inference
 There are couple of options to generate talking head; _synthetic head pose generation_, _reference head pose_, _still_, _video2video_, _pupil control_.
+
+Don't forget to change device type from the `config.yaml` file. You need to set the `inference.device` to specify the location where the model will run: use `cuda` for GPU, `cpu` for CPU, and `mps` for MacBook Silicon.
 
 ### Synthetic Head Pose Generation
 

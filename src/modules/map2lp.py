@@ -10,7 +10,7 @@ class Map2LivePortrait:
         self.semantic_radius = semantic_radius
 
         self.mapping = MappingNet(**mappingnet_cfg)
-        self.mapping.load_state_dict(torch.load(mappingnet_model_path))
+        self.mapping.load_state_dict(torch.load(mappingnet_model_path, map_location=self.device))
         self.mapping.to(self.device)
 
     def __call__(self, batch):
