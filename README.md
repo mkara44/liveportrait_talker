@@ -3,7 +3,7 @@ LivePortraitTalker is a zero-shot talking head generation approach. It combines 
 - Training the mapping network of Sadtalker for LivePortrait rendering networks.
 - This repo propose synthetic head pose generation which uses the inital head pose's and mappingnet outputs. 
 
-This is just Proof of Concept of the approach, the model is only trained on 2% of the VoxCeleb2 dataset.
+This is just Proof of Concept of the approach, the model is only trained on 8% of the VoxCeleb2 dataset.
 
 <p align="center">
   <img src="./assets/merged.gif" alt="showcase">
@@ -17,7 +17,7 @@ This is just Proof of Concept of the approach, the model is only trained on 2% o
     <br /><i>Model Diagram</i>
 </p>
 
-The pretrained models in the green boxes are from Sadtalker, the red boxes are from LivePortrait repository. The MappintNet architecture in the purple box is taken from Sadtalker and trained. The VoxCeleb2 dataset was used to train MappingNet. Due to GPU prices, the model was trained using approximately 2000 videos (<2% of the dataset). Therefore, the results may not be consistent and high quality. However, this work proves the concept. 
+The pretrained models in the green boxes are from Sadtalker, the red boxes are from LivePortrait repository. The MappintNet architecture in the purple box is taken from Sadtalker and trained. The VoxCeleb2 dataset was used to train MappingNet. Due to GPU prices, the model was trained using approximately 9000 videos (<8% of the dataset). Therefore, the results may not be consistent and high quality. However, this work proves the concept. 
 
 ## Installation
 - Python 3.10+
