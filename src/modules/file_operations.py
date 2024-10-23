@@ -130,10 +130,8 @@ class FileOperations:
 
             cv2.imwrite(os.path.join(tmp_folder_path, f"{str(idx).zfill(len(str(num_frames)))}.png"), cv2.cvtColor(original_frame[idx], cv2.COLOR_RGB2BGR))
 
-        if os.name == "nt":
-            os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{os.path.join(tmp_folder_path, '%.png')}' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
-        else:
-            os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{os.path.join(tmp_folder_path, '*.png')}' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
+
+        os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{os.path.join(tmp_folder_path, '*.png' if os.name != 'nt' else '%.png')}' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
         shutil.rmtree(tmp_folder_path)
 
         os.system(f"ffmpeg -hide_banner -loglevel error -i {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))} -i {audio_path} -map 0:v -map 1:a -c:v copy -shortest {os.path.join(self.source_folder_path, video_name)}")
