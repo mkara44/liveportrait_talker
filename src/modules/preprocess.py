@@ -165,9 +165,9 @@ class Preprocess:
         indiv_mels = torch.FloatTensor(indiv_mels).unsqueeze(1).unsqueeze(0)
         return indiv_mels.to(self.device), num_frames
     
-    def __get_blink(self, num_frames, eye_close_ratio=1):
-        left_eye_max = eye_close_ratio[:, :1].max() if eye_close_ratio != 1 else eye_close_ratio
-        right_eye_max = eye_close_ratio[: 1:].max() if eye_close_ratio != 1 else eye_close_ratio
+    def __get_blink(self, num_frames, eye_close_ratio=None):
+        left_eye_max = eye_close_ratio[:, :1].max() if eye_close_ratio is not None else .5
+        right_eye_max = eye_close_ratio[: 1:].max() if eye_close_ratio is not None else .5
 
         sd_ratio, lp_ratio = generate_blink_seq_randomly(num_frames, left_eye_max=left_eye_max, right_eye_max=right_eye_max)
 
