@@ -24,7 +24,6 @@ def main(args):
     preprocess = Preprocess(device=cfg.device,
                             fps=cfg.fps,
                             sadtalker_checkpoint_path=cfg.sadtalker_checkpoint_path,
-                            preprocessed_inputs_exist=file_operations.preprocessed_inputs_exist,
                             ref_head_pose_inputs_exist=file_operations.ref_head_pose_inputs_exist,
                             **cfg.preprocess)
     
@@ -37,7 +36,6 @@ def main(args):
     
     lp_render = LivePortraitRender(device=cfg.device,
                                    fps=cfg.fps,
-                                   instant_save_func=file_operations.instant_save_input,
                                    **cfg.lp_render)
     
     print("Pipeline Objects are initialized!")
@@ -52,7 +50,7 @@ def main(args):
              "ref_frames_from_zero": args.ref_frames_from_zero,
              "time": datetime.datetime.now().strftime("%d%m%Y-%H%M%S")}
     
-    if file_operations.preprocessed_inputs_exist or file_operations.ref_head_pose_inputs_exist:
+    if file_operations.ref_head_pose_inputs_exist:
         batch = {**batch, **file_operations.load_inputs()}  
 
     pipeline = [preprocess, audio2coeff, map2lp, lp_render]

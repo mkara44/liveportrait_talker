@@ -2,6 +2,7 @@ import os
 import cv2
 import torch
 import imageio
+import numpy as np
 from scipy.io import savemat, loadmat
 
 
@@ -23,11 +24,6 @@ class FileOperations:
             if os.path.exists(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat")):
                 self.ref_head_pose_inputs_exist = True
 
-        if os.path.exists(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat")):
-            self.preprocessed_inputs_exist = True
-        else:
-            self.preprocessed_inputs_exist = False
-
     def save(self, batch):
         self.save_output(still=batch["still"],
                          source_type=batch["source_type"],
@@ -38,41 +34,9 @@ class FileOperations:
                          original_frame=batch["original_frame"],
                          face_crop_coords=batch["face_crop_coords"])
         
-        #self.save_inputs(source_type=batch["source_type"],
-        #                rendering_input_face=batch["rendering_input_face"],
-        #                face_crop_coords=batch["face_crop_coords"],
-        #                original_frame=batch["original_frame"],
-        #                source_coeff=batch["source_coeff"])
-            
         if self.ref_head_pose_path is not None:
             self.save_references(source_type=batch["ref_source_type"],
                                  ref_R_list=batch["ref_R_list"])
-        
-    def instant_save_input(self, source_type, source_coeff, source_eye_close_ratio, face_crop_coords, x_s_i_info, R_s_i, f_s_i, x_s_i):
-        input_folder_path = os.path.join(self.source_folder_path, "preprocessed_inputs")
-        os.makedirs(input_folder_path, exist_ok=True)
-
-        batch_to_save = {"source_type": source_type,
-                         "source_coeff": source_coeff[0, 0, :].unsqueeze(0).detach().cpu().numpy(),
-                         "source_eye_close_ratio": source_eye_close_ratio[0].unsqueeze(0).detach().cpu().numpy(),
-                         "x_s_i_info": {k: [] for k in x_s_i_info.keys()},
-                         "face_crop_coords": [],
-                         "R_s_i": [],
-                         "f_s_i": [],
-                         "x_s_i": []}
-
-        file_save_path = os.path.join(input_folder_path, "batch.mat")
-        if os.path.exists(file_save_path):
-            batch_to_save = loadmat(file_save_path)
-
-        batch_to_save["face_crop_coords"].append(face_crop_coords)
-        batch_to_save["R_s_i"].append(R_s_i.detach().cpu().numpy())
-        batch_to_save["f_s_i"].append(f_s_i.detach().cpu().numpy())
-        batch_to_save["x_s_i"].append(x_s_i.detach().cpu().numpy())
-        for k, v in x_s_i_info.items():
-            batch_to_save["x_s_i_info"][k].append(v.detach().cpu().numpy())
-        
-        savemat(file_save_path, batch_to_save)
 
     def save_references(self, source_type, ref_R_list):
         input_folder_path = os.path.join(self.save_path, "references", self.ref_head_pose_name)
@@ -84,17 +48,6 @@ class FileOperations:
 
     def load_inputs(self):
         batch_to_load = {}
-        if False: #self.preprocessed_inputs_exist:
-            batch_inputs = loadmat(os.path.join(self.source_folder_path, "preprocessed_inputs", "batch.mat"))
-            batch_to_load["source_type"] = batch_inputs["source_type"][0]
-            batch_to_load["source_coeff"] = torch.tensor(batch_inputs["source_coeff"]).to(self.device)
-            batch_to_load["source_eye_close_ratio"] = torch.tensor(batch_inputs["source_eye_close_ratio"]).to(self.device)
-            batch_to_load["x_s_i_info"] = {k: torch.tensor(v).to(self.device) for k, v in batch_inputs["x_s_i_info"]}
-            batch_to_load["R_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["R_s_i"]]
-            batch_to_load["f_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["f_s_i"]]
-            batch_to_load["x_s_i"] = [torch.tensor(i).to(self.device) for i in batch_inputs["x_s_i"]]
-            print("Using existing inputs for this source input!")
-
         
         if self.ref_head_pose_inputs_exist:
             ref_batch = loadmat(os.path.join(self.save_path, "references", self.ref_head_pose_name, "batch.mat"))
@@ -126,7 +79,7 @@ class FileOperations:
             frame_list.append(original_frame[idx])
 
         imageio.mimsave(os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4')), frame_list,  fps=float(self.fps))
-        
+
         os.system(f"ffmpeg -hide_banner -loglevel error -i {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))} -i {audio_path} -map 0:v -map 1:a -c:v copy -shortest {os.path.join(self.source_folder_path, video_name)}")
         os.remove(os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4')))
 

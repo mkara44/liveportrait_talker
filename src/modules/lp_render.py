@@ -11,12 +11,11 @@ from src.utils.lp_render.synthetic_headpose_generation import SyntheticHeadPoseG
 class LivePortraitRender:
     lip_idx_list = [6, 12, 14, 17, 19, 20]
 
-    def __init__(self, device, fps, instant_save_func, driving_smooth_observation_variance, liveportrait_cfg, synthetic_headpose_generation_cfg):
+    def __init__(self, device, fps, driving_smooth_observation_variance, liveportrait_cfg, synthetic_headpose_generation_cfg):
         self.device = device
         self.fps = fps
         self.driving_smooth_observation_variance = driving_smooth_observation_variance
         self.liveportrait_cfg = liveportrait_cfg
-        self.instant_save_func = instant_save_func
 
         self.lip_array = torch.from_numpy(load_lip_array(self.liveportrait_cfg.lip_array_pkl_path)).to(dtype=torch.float32, device=device)
         self.synthetic_headpose_generation = SyntheticHeadPoseGeneration(device=self.device,
@@ -28,16 +27,9 @@ class LivePortraitRender:
 
     def make_motion_template_from_pred(self, pred):
         bs = pred['exp'].shape[0]
-        #pred['pitch'] = headpose_pred_to_degree(pred['pitch'])[:, None] * pitch_weight  # Bx1
-        #pred['yaw'] = headpose_pred_to_degree(pred['yaw'])[:, None] * yaw_weight  # Bx1
-        #pred['roll'] = headpose_pred_to_degree(pred['roll'])[:, None] * roll_weight  # Bx1
         pred['exp'] = pred['exp'].reshape(bs, -1, 3)  # BxNx3
 
-        #R_i = get_rotation_matrix(pred['pitch'], pred['yaw'], pred['roll'])
-        item_dct = {#'R': R_i.to(self.device),
-                    'exp': pred['exp'].to(self.device),
-                    #'t': pred['t'].to(self.device),
-                    }
+        item_dct = {'exp': pred['exp'].to(self.device)}
 
         template_dct = {'motion': item_dct}
         return template_dct
@@ -67,7 +59,6 @@ class LivePortraitRender:
         pupil_x = batch["pupil_x"]
         pupil_y = batch["pupil_y"]
         source_type = batch["source_type"]
-        source_coeff = batch["source_coeff"]
         rendering_input_face = batch["rendering_input_face"]
         source_eye_close_ratio = batch.get("source_eye_close_ratio", None)
         driving_blink_ratio = batch.get("liveportrait_blink_ratio", None)
@@ -100,7 +91,6 @@ class LivePortraitRender:
 
             elif source_type == "image" and i == 0:
                 x_s_i_info, R_s_i, f_s_i, x_s_i = self.predict_source_inputs(rendering_input_face=rendering_input_face)
-                #self.instant_save_func(source_type=source_type, source_coeff=source_coeff, source_eye_close_ratio=source_eye_close_ratio, x_s_i_info=x_s_i_info, R_s_i=R_s_i, f_s_i=f_s_i, x_s_i=x_s_i)
 
                 if not still:
                     if ref_R_list is None:

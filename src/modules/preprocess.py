@@ -13,8 +13,7 @@ from src.utils.preprocess.sadtalker_preprocess import SadTalkerPreprocess
 
 
 class Preprocess:
-    def __init__(self, device, fps, sadtalker_checkpoint_path,
-                 preprocessed_inputs_exist, ref_head_pose_inputs_exist, 
+    def __init__(self, device, fps, sadtalker_checkpoint_path, ref_head_pose_inputs_exist, 
                  use_blink, speech_rate, syncnet_mel_step_size, liveportrait_input_shape, sadtalker_preprocesser_cfg):
         self.device = device
         self.fps = fps
@@ -22,7 +21,6 @@ class Preprocess:
         self.speech_rate = speech_rate
         self.syncnet_mel_step_size = syncnet_mel_step_size
         self.liveportrait_input_shape = liveportrait_input_shape
-        self.preprocessed_inputs_exist = preprocessed_inputs_exist
         self.ref_head_pose_inputs_exist = ref_head_pose_inputs_exist
 
         self.sd_prep = SadTalkerPreprocess(device=device,
@@ -42,15 +40,14 @@ class Preprocess:
         batch["num_frames"] = num_frames
 
         source_type = check_source_type(batch["source_path"])
-        do_pred_coeff = True #if not self.preprocessed_inputs_exist else False
         if source_type == "image":
             original_frame, face_for_rendering, pred_coeff, face_crop_coords, eye_close_ratio = self.__image_source_call(inp_path=batch["source_path"],
                                                                                                                          num_frames=num_frames,
-                                                                                                                         do_pred_coeff=do_pred_coeff,
+                                                                                                                         do_pred_coeff=True,
                                                                                                                          no_crop=batch["no_crop"])
             
             eye_close_ratio = torch.tensor(eye_close_ratio, dtype=torch.float32).repeat(num_frames, 1).to(self.device)
-            sd_ratio, lp_ratio = self.__get_blink(num_frames=num_frames, eye_close_ratio=eye_close_ratio.detach().cpu().numpy()) #max_point=eye_close_ratio.max().detach().cpu().item())
+            sd_ratio, lp_ratio = self.__get_blink(num_frames=num_frames, eye_close_ratio=eye_close_ratio.detach().cpu().numpy())
 
             batch["source_eye_close_ratio"] = eye_close_ratio
             batch["liveportrait_blink_ratio"] = lp_ratio
@@ -58,7 +55,7 @@ class Preprocess:
         elif source_type == "video":
             original_frame, face_for_rendering, pred_coeff, face_crop_coords = self.__video_source_call(inp_path=batch["source_path"],
                                                                                                         num_frames=num_frames,
-                                                                                                        do_pred_coeff=do_pred_coeff,
+                                                                                                        do_pred_coeff=True,
                                                                                                         no_crop=batch["no_crop"])
             sd_ratio, _ = self.__get_blink(num_frames=num_frames)
 
@@ -84,8 +81,7 @@ class Preprocess:
             elif reference_source_type == "video":
                 _, face_for_rendering, _, _ = self.__video_source_call(inp_path=batch["ref_head_pose_path"],
                                                                           num_frames=num_frames,
-                                                                          do_pred_coeff=False,
-                                                                          source=False)
+                                                                          do_pred_coeff=False)
             batch["ref_source_type"] = reference_source_type
             batch["ref_rendering_input_face"] = face_for_rendering
 
@@ -98,9 +94,9 @@ class Preprocess:
         face_for_rendering, pred_coeff, crop_for_rendering, eye_close_ratio = self.__get_3dmm_coeff(img, do_pred=do_pred_coeff, no_crop=no_crop)
         return [img]*num_frames, face_for_rendering, pred_coeff, [crop_for_rendering]*num_frames, eye_close_ratio
     
-    def __video_source_call(self, inp_path, num_frames, do_pred_coeff, source=True, no_crop=False):
+    def __video_source_call(self, inp_path, num_frames, do_pred_coeff, no_crop=False):
         cap = cv2.VideoCapture(inp_path)
-        video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not source else num_frames
+        video_num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         frame_list = []
         pred_coeff = None
@@ -120,12 +116,11 @@ class Preprocess:
             crop_for_rendering_list.append(crop_for_rendering)
             face_for_rendering_list.append(face_for_rendering)
 
-        #while len(frame_list) > num_frames:
-        #    frame_list += frame_list[-video_num_frames:][::-1]
-        #    crop_for_rendering_list += crop_for_rendering_list[-video_num_frames:][::-1]
-        #    face_for_rendering_list += face_for_rendering_list[-video_num_frames:][::-1]
-
-        #    print("Number of video frames are smaller than expected frame number, video frames are reversed and added!")
+        while len(frame_list) < num_frames:
+            frame_list += frame_list[-video_num_frames:][::-1]
+            crop_for_rendering_list += crop_for_rendering_list[-video_num_frames:][::-1]
+            face_for_rendering_list += face_for_rendering_list[-video_num_frames:][::-1]
+            print("Number of video frames are smaller than expected frame number, video frames are reversed and added!")
 
         face_for_rendering_list = torch.cat(face_for_rendering_list, dim=0)
         return frame_list, face_for_rendering_list, pred_coeff, crop_for_rendering_list
