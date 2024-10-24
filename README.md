@@ -35,6 +35,11 @@ There are couple of options to generate talking head; _synthetic head pose gener
 
 Don't forget to change device type from the `config.yaml` file. You need to set the `inference.device` to specify the location where the model will run: use `cuda` for GPU, `cpu` for CPU, and `mps` for MacBook Silicon.
 
+MacBook Silicon users has to add `PYTORCH_ENABLE_MPS_FALLBACK=1` command before the python command
+```bash 
+PYTORCH_ENABLE_MPS_FALLBACK=1 python inference.py ...
+```
+
 ### Synthetic Head Pose Generation
 
 Most talking head papers, such as SadTalker, generate head poses from the input audio. However, I do not think that head poses have a common features with audio. Therefore, I proposed Synthetic Head Pose Generation without using audio. This approach can generate head poses more naturally then previous approaches. I will give more information about Synthetic Head Pose Generation in next sections.

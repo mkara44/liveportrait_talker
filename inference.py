@@ -15,6 +15,7 @@ def main(args):
     print("Config File is loaded succesfully!")
 
     file_operations = FileOperations(device=cfg.device,
+                                     fps=cfg.fps,
                                      save_path=args.save_path,
                                      source_path=args.source_path,
                                      audio_path=args.audio_path,

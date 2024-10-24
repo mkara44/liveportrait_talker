@@ -1,13 +1,14 @@
 import os
 import cv2
 import torch
-import shutil
+import imageio
 from scipy.io import savemat, loadmat
 
 
 class FileOperations:
-    def __init__(self, device, save_path, source_path, audio_path, ref_head_pose_path):
+    def __init__(self, device, fps, save_path, source_path, audio_path, ref_head_pose_path):
         self.device = device
+        self.fps = fps
         self.save_path = save_path
         self.source_name = source_path.split(os.sep)[-1].split(".")[0]
         self.audio_name = audio_path.split(os.sep)[-1].split(".")[0]
@@ -104,12 +105,7 @@ class FileOperations:
         return batch_to_load
 
     def save_output(self, still, source_type, rendered_frame_list, num_frames, time, audio_path, original_frame, face_crop_coords):
-        tmp_folder_path = os.path.join(self.source_folder_path, "tmp")
-        if os.path.exists(tmp_folder_path):
-            shutil.rmtree(tmp_folder_path)
-
-        os.makedirs(tmp_folder_path)
-
+        frame_list = []
         video_name = f"{self.audio_name}_{time}.mp4"
         for idx, rendered_frame in enumerate(rendered_frame_list):
             rendered_frame = (rendered_frame[0].permute(1,2,0).detach().cpu().numpy()*255).astype("uint8")
@@ -127,13 +123,10 @@ class FileOperations:
             w -= w % 2
             h -= h % 2
             original_frame[idx] = cv2.resize(original_frame[idx], (w, h))
+            frame_list.append(original_frame[idx])
 
-            cv2.imwrite(os.path.join(tmp_folder_path, f"{str(idx).zfill(len(str(num_frames)))}.png"), cv2.cvtColor(original_frame[idx], cv2.COLOR_RGB2BGR))
-
-
-        os.system(f"ffmpeg -y -hide_banner -loglevel error -framerate 25 -pattern_type glob -i '{os.path.join(tmp_folder_path, '*.png' if os.name != 'nt' else '%.png')}' -c:v libx264 -pix_fmt yuv420p {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))}")
-        shutil.rmtree(tmp_folder_path)
-
+        imageio.mimsave(os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4')), frame_list,  fps=float(self.fps))
+        
         os.system(f"ffmpeg -hide_banner -loglevel error -i {os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4'))} -i {audio_path} -map 0:v -map 1:a -c:v copy -shortest {os.path.join(self.source_folder_path, video_name)}")
         os.remove(os.path.join(self.source_folder_path, video_name.replace('.mp4', '_novoice.mp4')))
 

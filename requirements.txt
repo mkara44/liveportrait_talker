@@ -1,4 +1,5 @@
 facexlib==0.3.0
+imageio==2.34.2
 kornia==0.7.3
 librosa==0.10.1
 lws==1.2.8
