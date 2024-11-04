@@ -42,7 +42,7 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 python inference.py ...
 
 ### Synthetic Head Pose Generation
 
-Most talking head papers, such as SadTalker, generate head poses from the input audio. However, I do not think that head poses have a common features with audio. Therefore, I proposed Synthetic Head Pose Generation without using audio. This approach can generate head poses more naturally then previous approaches. I will give more information about Synthetic Head Pose Generation in next sections.
+Most talking head papers, such as SadTalker, generate head poses from the input audio. However, I do not think that head poses have a common features with audio. Therefore, I proposed Synthetic Head Pose Generation without using audio. This approach can generate head poses more naturally then previous approaches. Detailed explanation of this method can be read (here)[./synthetic_headpose_generation.md].
 
 ```bash 
 python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder>
@@ -101,9 +101,6 @@ Unlike Sadtalker, this repository predicts only lip expressions. Therefore, othe
 ```bash
 python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --pupil_x <pupil/x/number> --pupil_y <pupil/y/number>
 ```
-
-## Head Pose Generation
-will be updated
 
 ## Acknowledgements
 - [SadTalker](https://github.com/OpenTalker/SadTalker/tree/main)

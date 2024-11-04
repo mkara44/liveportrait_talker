@@ -168,3 +168,4 @@ outputs/
 playground.py
 *.drawio
 pretrained_models/
+notebook/
