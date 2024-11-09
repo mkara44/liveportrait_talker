@@ -169,3 +169,5 @@ playground.py
 *.drawio
 pretrained_models/
 notebook/
+ckpts/
+logs/

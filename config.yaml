@@ -49,3 +49,46 @@ inference:
     synthetic_headpose_generation_cfg:
       window_size: 7
       threshold: 0.02
+
+train:
+  checkpoint_save_path: /mnt/ckpts
+  logging_save_path: /mnt/logs
+  model_cfg:
+    device: mps
+    batch_size: 1
+    num_workers: 6
+    learning_rate: 2e-4
+    train_dataset_folder_path: /mnt/train
+    val_dataset_folder_path: /mnt/val
+    dataset_cfg:
+      semantic_radius: 14
+      input_size: 256
+    motionextraction_cfg:
+      models_config_path: ./src/utils/lp_render/models.yaml
+      motion_extractor_checkpoint_path: ./pretrained_models/liveportrait/base_models/motion_extractor.pth
+    mappingnet_cfg: 
+      coeff_nc: 64
+      descriptor_nc: 1024
+      layer: 3
+      num_kp: 6
+      num_bins: 66
+    loss_cfg:
+      reduction: mean
+
+download:
+  target_fps: 25
+  dataset_folder_path: /mnt/train
+  raw_folder_path: /mnt/raw_train
+
+threedmm:
+  device: mps
+  fps: 25
+  batch_size: 1 #28
+  dataset_folder_path: /mnt/train
+  raw_folder_path: /mnt/raw_train
+  sadtalker_checkpoint_path: ./pretrained_models/sadtalker/SadTalker_V0.0.2_256.safetensors
+  preprocesser_cfg:
+    pic_size: 256
+    model_path: ./pretrained_models/sadtalker
+    frontality_threshold: 50
+    lm3d_mat_path: ./src/utils/preprocess
