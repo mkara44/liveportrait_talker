@@ -1,5 +1,6 @@
 facexlib==0.3.0
 imageio==2.34.2
+joblib==1.3.1
 kornia==0.7.3
 librosa==0.10.1
 lws==1.2.8
@@ -8,8 +9,11 @@ omegaconf==2.3.0
 opencv_contrib_python==4.10.0.82
 opencv_python==4.10.0.84
 opencv_python_headless==4.10.0.84
+pandas==2.2.3
 Pillow==10.4.0
 pykalman==0.9.7
+pytorch_lightning==2.0.4
+pytubefix==8.0.0
 PyYAML==6.0.1
 safetensors==0.3.1
 scipy==1.14.1
