@@ -55,7 +55,7 @@ train:
   logging_save_path: /mnt/logs
   model_cfg:
     device: mps
-    batch_size: 1
+    batch_size: 64
     num_workers: 6
     learning_rate: 2e-4
     train_dataset_folder_path: /mnt/train
@@ -83,7 +83,7 @@ download:
 threedmm:
   device: mps
   fps: 25
-  batch_size: 1 #28
+  batch_size: 28
   dataset_folder_path: /mnt/train
   raw_folder_path: /mnt/raw_train
   sadtalker_checkpoint_path: ./pretrained_models/sadtalker/SadTalker_V0.0.2_256.safetensors

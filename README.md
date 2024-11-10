@@ -102,6 +102,45 @@ Unlike Sadtalker, this repository predicts only lip expressions. Therefore, othe
 python inference.py --config_path config.yaml --source_path <path/to/source/image> --audio_path <path/to/audio> --save_path <path/to/save/folder> --pupil_x <pupil/x/number> --pupil_y <pupil/y/number>
 ```
 
+## Training
+Training script containt three mode; _download_, _thredmm_, _train_. Before run any of these mode you need the download [VoxCeleb2](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html) Dataset. You can download using following command.
+
+```bash
+wget www.robots.ox.ac.uk/~vgg/data/voxceleb/data/vox1_test_txt.zip
+wget www.robots.ox.ac.uk/~vgg/data/voxceleb/data/vox1_dev_txt.zip
+```
+
+After installation you should update the `config.yaml`. The path of the downloaded dataset must be set to `raw_folder_path` and the path of videos to be downloaded must be set to `dataset_folder_path`. Each mode is seperated in config file to be able to use them concurrently with different configurations.
+
+### Download Videos
+VoxCeleb2 dataset is created using videos from YouTube. Therefore, dataset files don't contain any videos. Before training each video should be downloaded. The script is also trim the video using timesteps in dataset files. Each trimmed part is saved seperately and original video is deleted to decrease storage space.
+
+You must update the `download.raw_folder_path` and `download.dataset_folder_path` parameters from the `config.yaml`.
+
+```bash
+python train.py --config_path config.yaml --model download
+```
+
+### 3DMM Prediction
+The MappingNet network takes 3DMM coefficients as an input. Also, it does not take single coefficient for a frame, it takes previous and next frames' coefficients too. Therefore it would be better to extract 3DMM prediction before training, instead of during training. Otherwise, the script would consume much more GPU memory during training.  
+
+You must update the `threedmm.raw_folder_path` and `threedmm.dataset_folder_path` parameters from the `config.yaml`.
+
+```bash
+python train.py --config_path config.yaml --model threedmm
+```
+
+### MappingNet Training
+After downloading the dataset and predicting 3DMM coefficients, dataset is ready to be fed. The MappingNet network takes input as a 3DMM coefficients which is generated from previous step. Each frame is fed to LivePortrait's pretrained Motion Extractor network. This network predicts multiple canonical keypoints contains facial expression, headposes. In this work lip-related canonical keypoints is used as a Ground Truth. To sum up, MappingNet network takes 3DMM coefficients and predicts lip-related canonical keypoints of the face in the frame.
+
+During training, L1 Loss is used as a loss function. Originally, Sadtalker uses additional losses like perceptual loss, gan loss, feature matching loss, equivariance loss, keypoints loss, headpose loss, expression loss. If these loss functions are to be added, frame rendering must also be added to the training pipeline too.
+
+You must update the `train.train_dataset_folder_path` and `train.val_dataset_folder_path` parameters from the `config.yaml`.
+
+```bash
+python train.py --config_path config.yaml --model train
+```
+
 ## Acknowledgements
 - [SadTalker](https://github.com/OpenTalker/SadTalker/tree/main)
 - [LivePortrait](https://github.com/KwaiVGI/LivePortrait/tree/main)
