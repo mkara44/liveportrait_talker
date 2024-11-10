@@ -138,7 +138,7 @@ During training, L1 Loss is used as a loss function. Originally, Sadtalker uses 
 You must update the `train.train_dataset_folder_path` and `train.val_dataset_folder_path` parameters from the `config.yaml`.
 
 ```bash
-python train.py --config_path config.yaml --model train
+python train.py --config_path config.yaml --model train --experiment_name <experiment_name>
 ```
 
 ## Acknowledgements
